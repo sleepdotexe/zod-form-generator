@@ -1,0 +1,36 @@
+import React from "react";
+import * as z from "zod/v4/core";
+
+declare module "react" {
+  interface HTMLAttributes<T> {
+    [key: `data-${string}`]: string | number | undefined;
+  }
+}
+
+export type Component<
+  Type extends
+    | keyof React.JSX.IntrinsicElements
+    | React.JSXElementConstructor<unknown>,
+  CustomProps = object,
+  OmitProps extends keyof (React.ComponentProps<Type> & CustomProps) = never
+> = React.FC<Omit<React.ComponentProps<Type>, OmitProps> & CustomProps>;
+
+export type ZodForm<Schema extends z.$ZodObject> = {
+  data: DeepNullable<z.infer<Schema>>;
+  errors: z.$ZodIssue[] | null;
+  isDirty: boolean;
+  dirtyFields: Set<string>;
+  isTouched: boolean;
+  touchedFields: Set<string>;
+  hasAttemptedSubmit: boolean;
+};
+
+declare module "zod/v4/core" {
+  interface GlobalMeta {
+    inputType?: "tel" | "password" | "date" | "radio";
+    inputMode?: React.HTMLAttributes<HTMLInputElement>["inputMode"];
+    placeholder?: string;
+    autoComplete?: React.HTMLInputAutoCompleteAttribute;
+    enumLabels?: Record<string, string>;
+  }
+}
