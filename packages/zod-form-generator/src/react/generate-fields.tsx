@@ -8,7 +8,8 @@ import {
   getNestedValueByPath,
   setNestedValueByPath,
 } from '../core/util';
-import { Input } from './components/Fields';
+import { toJSONSchema } from '../core/zod-helpers';
+import { Checkbox, Input } from './components/Fields';
 import {
   FieldDescription,
   FieldError,
@@ -30,6 +31,7 @@ export type CustomFormElements = Partial<{
   label: typeof FieldLabel;
   description: typeof FieldDescription;
   input: typeof Input;
+  checkbox: typeof Checkbox;
   fieldError: typeof FieldError;
   formError: typeof FormError;
   buttonContainer: typeof ButtonContainer;
@@ -52,7 +54,7 @@ export const generateFields = <Schema extends z.$ZodObject>(
   props: GenerateFieldsProps<Schema>
 ) => {
   const { schema, ...restProps } = props;
-  const initalJsonSchema = z.toJSONSchema(schema, { io: 'input' });
+  const initalJsonSchema = toJSONSchema(schema);
 
   return _generateFields<typeof schema>({
     schema,
@@ -110,11 +112,12 @@ const _generateFields = <Schema extends z.$ZodObject>(
   }
 
   const {
-    formError: FormErrorSlot = FormError,
-    input: InputSlot = Input,
     fieldset: FieldsetSlot = Fieldset,
     label: LabelSlot = FieldLabel,
     description: DescriptionSlot = FieldDescription,
+    input: InputSlot = Input,
+    checkbox: CheckboxSlot = Checkbox,
+    formError: FormErrorSlot = FormError,
     fieldError: FieldErrorSlot = FieldError,
   } = customElements;
 
@@ -126,19 +129,29 @@ const _generateFields = <Schema extends z.$ZodObject>(
     const input: z.JSONSchema.JSONSchema & z.GlobalMeta = coerceAnyOfToSingleInput(value);
     const dotPathToKey = [...pathToKey, key].join('.');
 
-    if (input.type === 'object' && input.properties) {
-      const { title, wrapper } = input;
+    if (!input.type || input.type === 'null') {
+      return null;
+    }
+
+    if (input.type === 'object') {
+      if (!input.properties) {
+        return null;
+      }
+
+      const { title, description, unwrap, readOnly } = input;
 
       const fieldsetErrors = formState.errors
         ?.filter((issue) => issue.path.join('.') === dotPathToKey)
         .slice(0, showFieldErrors === 'first' ? 1 : undefined);
 
-      const Wrapper = wrapper ? FieldsetSlot : Fragment;
+      const Wrapper = unwrap ? Fragment : FieldsetSlot;
 
       return (
         <Wrapper
+          description={unwrap ? undefined : description}
+          disabled={unwrap ? undefined : formDisabled || readOnly}
           key={key}
-          legend={title}
+          legend={unwrap ? undefined : title}
         >
           {!!fieldsetErrors?.length &&
             fieldsetErrors.map((issue) => (
@@ -164,20 +177,23 @@ const _generateFields = <Schema extends z.$ZodObject>(
       placeholder,
       title,
       nullable,
-      wrapper,
+      readOnly,
+      unwrap,
     } = input;
 
     const fieldIsTouched = formState.touchedFields.has(dotPathToKey);
     const fieldIsDirty = formState.dirtyFields.has(dotPathToKey);
     const fieldIsRequired = required?.includes(key) && !nullable;
 
-    const fallbackValue = nullable ? null : '';
-
-    const possibleValue = getNestedValueByPath(formState.data, [...pathToKey, key]);
-    const valueAtKey =
-      typeof possibleValue === 'string' || Array.isArray(possibleValue)
-        ? possibleValue
-        : fallbackValue;
+    const valueFromState = getNestedValueByPath(formState.data, [...pathToKey, key]);
+    const valueFormattedForInput =
+      typeof valueFromState === 'string'
+        ? valueFromState
+        : typeof valueFromState === 'number'
+          ? valueFromState.toString()
+          : Array.isArray(valueFromState)
+            ? valueFromState
+            : null;
 
     const thisFieldErrors = formState.errors
       ?.filter((issue) => issue.path.join('.') === dotPathToKey)
@@ -187,7 +203,7 @@ const _generateFields = <Schema extends z.$ZodObject>(
       formIsTouched: formState.isTouched,
       formIsDirty: formState.isDirty,
       formHasError: !!formState.errors?.length,
-      fieldValue: valueAtKey,
+      fieldValue: valueFormattedForInput,
       fieldIsTouched,
       fieldIsDirty,
       fieldHasError: !!thisFieldErrors?.length,
@@ -198,11 +214,27 @@ const _generateFields = <Schema extends z.$ZodObject>(
       issue.code === 'invalid_union' ? issue.errors.flat() : [issue]
     );
 
+    const setValueInState = (value: string | number | boolean | null | undefined) =>
+      setFormState((prev) => {
+        const newData: typeof prev.data = setNestedValueByPath(
+          prev.data,
+          [...pathToKey, key],
+          value
+        );
+        return {
+          ...prev,
+          data: newData,
+          errors: z.safeParse(schema, newData).error?.issues ?? null,
+          dirtyFields: prev.dirtyFields.add(dotPathToKey),
+          isDirty: true,
+        };
+      });
+
     const sharedProps: Partial<ComponentProps<typeof Input>> = {
       labelSlot: LabelSlot,
       descriptionSlot: DescriptionSlot,
       errorSlot: FieldErrorSlot,
-      value: undefined,
+      value: valueFormattedForInput ?? '',
       label: title ?? key,
       placeholder,
       description,
@@ -210,23 +242,10 @@ const _generateFields = <Schema extends z.$ZodObject>(
       inputMode,
       required: fieldIsRequired,
       errors: showErrors ? thisFieldFlattenedErrors : undefined,
-      disabled: formDisabled,
+      disabled: formDisabled || readOnly,
       showRequiredAsterisk,
-      onChange: (e) =>
-        setFormState((prev) => {
-          const newData: typeof prev.data = setNestedValueByPath(
-            prev.data,
-            [...pathToKey, key],
-            e.target.value.length > 0 ? e.target.value : fallbackValue
-          );
-          return {
-            ...prev,
-            data: newData,
-            errors: z.safeParse(schema, newData).error?.issues ?? null,
-            dirtyFields: prev.dirtyFields.add(dotPathToKey),
-            isDirty: true,
-          };
-        }),
+      unwrap,
+      onChange: (e) => setValueInState(e.target.value),
       onBlur: () =>
         setFormState((prev) => {
           if (prev.hasAttemptedSubmit) {
@@ -292,7 +311,7 @@ const _generateFields = <Schema extends z.$ZodObject>(
         return (
           <InputSlot
             {...sharedProps}
-            autoComplete='tel-national'
+            autoComplete={autoComplete ?? 'tel-national'}
             inputMode='tel'
             key={key}
             onChange={(e) => {
@@ -308,8 +327,7 @@ const _generateFields = <Schema extends z.$ZodObject>(
                 formattedValue = new AsYouType(defaultCountry).input(e.target.value);
               }
 
-              e.target.value = formattedValue;
-              sharedProps.onChange?.(e);
+              setValueInState(formattedValue);
             }}
             type='tel'
           />
@@ -326,20 +344,33 @@ const _generateFields = <Schema extends z.$ZodObject>(
         );
       }
 
+      const formatProps: Pick<
+        ComponentProps<typeof InputSlot>,
+        'inputMode' | 'type' | 'autoComplete'
+      > = {
+        inputMode:
+          sharedProps.inputMode ??
+          (format === 'email' ? 'email' : format === 'uri' ? 'url' : 'text'),
+        type:
+          sharedProps.type ??
+          (inputType === 'password' ? 'password' : format === 'email' ? 'email' : 'text'),
+        autoComplete:
+          sharedProps.autoComplete ??
+          (format === 'email'
+            ? 'email'
+            : inputType === 'password'
+              ? 'current-password'
+              : undefined),
+      };
+
       return (
         <InputSlot
           {...sharedProps}
-          inputMode={
-            sharedProps.inputMode ??
-            (format === 'email' ? 'email' : format === 'uri' ? 'url' : 'text')
-          }
+          {...formatProps}
           key={key}
           maxLength={maxLength}
           minLength={minLength}
           pattern={pattern}
-          type={
-            inputType === 'password' ? 'password' : format === 'email' ? 'email' : 'text'
-          }
         />
       );
     }
@@ -354,7 +385,27 @@ const _generateFields = <Schema extends z.$ZodObject>(
           key={key}
           max={maximum}
           min={minimum}
+          onChange={(e) => {
+            const parse = type === 'integer' ? parseInt : parseFloat;
+            const parsedValue = parse(e.target.value);
+            setValueInState(Number.isNaN(parsedValue) ? null : parsedValue);
+          }}
           type='number'
+        />
+      );
+    }
+
+    if (type === 'boolean') {
+      return (
+        <CheckboxSlot
+          {...sharedProps}
+          autoComplete={undefined}
+          checked={Boolean(valueFromState)}
+          inputMode={undefined}
+          key={key}
+          onChange={(e) => setValueInState(e.target.checked)}
+          placeholder={undefined}
+          type='checkbox'
         />
       );
     }

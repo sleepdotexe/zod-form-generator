@@ -1,17 +1,17 @@
 import { parse } from 'date-fns';
-import {
-  type CountryCode,
-  isValidPhoneNumber,
-  parsePhoneNumberWithError,
-} from 'libphonenumber-js';
+import { isValidPhoneNumber, parsePhoneNumberWithError } from 'libphonenumber-js';
 import z from 'zod/v4';
+
+import type { CountryCode } from 'libphonenumber-js';
 import type * as zc from 'zod/v4/core';
 
 export const DateInput = (params?: string | zc.$ZodAnyParams) =>
   z
     .string(params)
     .refine((val) => {
-      if (typeof val !== 'string') return false;
+      if (typeof val !== 'string') {
+        return false;
+      }
 
       try {
         const parsedDate = parse(val, 'yyyy-MM-dd', new Date());
@@ -35,7 +35,9 @@ export const PhoneInput = (
       params
     )
     .transform((val) => {
-      if (typeof val !== 'string') return val;
+      if (typeof val !== 'string') {
+        return val;
+      }
       try {
         const parsedPhone = parsePhoneNumberWithError(val, countryCode);
         return parsedPhone.number;

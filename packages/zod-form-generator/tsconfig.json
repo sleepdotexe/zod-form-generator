@@ -6,6 +6,7 @@
     "composite": true,
     "declaration": true,
     "declarationMap": true,
+    "removeComments": true,
     "jsx": "react-jsx",
     "lib": ["dom", "dom.iterable", "esnext"]
   },

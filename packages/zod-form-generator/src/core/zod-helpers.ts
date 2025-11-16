@@ -3,14 +3,16 @@ import * as z from 'zod/v4/core';
 export const generateEmptyObjectFromSchema = <Schema extends z.$ZodObject>(
   schema: Schema
 ): DeepNullable<z.infer<Schema>> => {
-  const jsonSchema = z.toJSONSchema(schema, { io: 'input' });
+  const jsonSchema = toJSONSchema(schema);
 
   const parseJsonSchema = (
     jsonSchema: z.JSONSchema._JSONSchema
   ): ReturnType<typeof generateEmptyObjectFromSchema<Schema>> => {
     let result: Partial<DeepNullable<z.infer<Schema>>> = {};
 
-    if (typeof jsonSchema === 'boolean') return result as DeepNullable<z.infer<Schema>>;
+    if (typeof jsonSchema === 'boolean') {
+      return result as DeepNullable<z.infer<Schema>>;
+    }
 
     for (const [key, value] of Object.entries(jsonSchema.properties ?? {})) {
       if (typeof value === 'boolean') {
@@ -35,4 +37,10 @@ export const generateEmptyObjectFromSchema = <Schema extends z.$ZodObject>(
   };
 
   return parseJsonSchema(jsonSchema);
+};
+
+export const toJSONSchema = <Schema extends z.$ZodObject>(
+  schema: Schema
+): z.JSONSchema._JSONSchema => {
+  return z.toJSONSchema(schema, { io: 'input' });
 };

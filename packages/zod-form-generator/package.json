@@ -16,7 +16,7 @@
       "require": "./dist/react/components/index.js"
     },
     "./tailwind": {
-      "style": "./styles/tailwind.css"
+      "style": "./src/styles/tailwind.css"
     }
   },
   "files": ["dist", "styles", "README.md"],

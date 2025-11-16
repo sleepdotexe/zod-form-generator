@@ -33,18 +33,21 @@ export const FormError: Component<'p'> = ({ className, children, ...props }) => 
   );
 };
 
-export const Fieldset: Component<'fieldset', { legend?: string }> = ({
-  className,
-  children,
-  legend,
-  ...props
-}) => {
+export const Fieldset: Component<
+  'fieldset',
+  { legend?: string; description?: string }
+> = ({ className, children, legend, description, ...props }) => {
   return (
     <fieldset
       className={cn('flex flex-col gap-4', className)}
       {...props}
     >
-      {legend && <FormLegend>{legend}</FormLegend>}
+      {(legend || description) && (
+        <div>
+          {legend && <FormLegend>{legend}</FormLegend>}
+          {description && <FieldDescription>{description}</FieldDescription>}
+        </div>
+      )}
       {children}
     </fieldset>
   );
@@ -53,7 +56,7 @@ export const Fieldset: Component<'fieldset', { legend?: string }> = ({
 export const FormLegend: Component<'legend'> = ({ className, children, ...props }) => {
   return (
     <legend
-      className={cn('inline-block text-base font-bold m-0 mb-4', className)}
+      className={cn('inline-block text-lg font-bold m-0 mb-1', className)}
       {...props}
     >
       {children}
@@ -71,7 +74,7 @@ export const FieldLabel: Component<'label', { showRequiredAsterisk?: boolean }> 
     // biome-ignore lint/a11y/noLabelWithoutControl: generic component
     <label
       className={cn(
-        'font-semibold text-sm m-0  group-has-required:after:ml-0.5 group-has-required:after:text-red-600 dark:group-has-required:after:text-red-400',
+        'font-semibold text-sm m-0 group-has-required:after:ml-0.5 group-has-required:after:text-red-600 dark:group-has-required:after:text-red-400 cursor-pointer group-has-disabled:cursor-auto',
         showRequiredAsterisk && "group-has-required:after:content-['*']",
         className
       )}

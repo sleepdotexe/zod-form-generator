@@ -1,6 +1,8 @@
-import { clsx, type ClassValue } from 'clsx';
+import { clsx } from 'clsx';
 import { twMerge } from 'tailwind-merge';
-import * as z from 'zod/v4/core';
+
+import type { ClassValue } from 'clsx';
+import type * as z from 'zod/v4/core';
 
 export const boolAttribute = (bool: boolean) => (bool ? '' : undefined);
 
@@ -54,10 +56,14 @@ export const setNestedValueByPath = <T extends object>(
   pathKeys: string[],
   value: unknown
 ): T => {
-  if (pathKeys.length === 0) return object;
+  if (pathKeys.length === 0) {
+    return object;
+  }
 
   const [first, ...rest] = pathKeys;
-  if (!first) return object;
+  if (!first) {
+    return object;
+  }
 
   if (rest.length === 0) {
     return {
@@ -89,10 +95,10 @@ export const coerceAnyOfToSingleInput = (
   const nonNullTypes = flattenedTypes.filter((e) => e.type !== 'null');
   metadata.nullable = flattenedTypes.some((e) => e.type === 'null');
 
-  if (nonNullTypes.length === 1) {
+  if (nonNullTypes.length === 1 && nonNullTypes[0]) {
     return {
       ...metadata,
-      ...nonNullTypes[0]!,
+      ...nonNullTypes[0],
     };
   }
 

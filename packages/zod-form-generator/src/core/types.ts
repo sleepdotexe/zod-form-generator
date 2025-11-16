@@ -2,6 +2,7 @@ import type React from 'react';
 import type * as z from 'zod/v4/core';
 
 declare module 'react' {
+  // biome-ignore lint/correctness/noUnusedVariables: Extending existing interface
   interface HTMLAttributes<T> {
     [key: `data-${string}`]: string | number | undefined;
   }
@@ -29,7 +30,7 @@ declare module 'zod/v4/core' {
     inputMode?: React.HTMLAttributes<HTMLInputElement>['inputMode'];
     placeholder?: string;
     autoComplete?: React.HTMLInputAutoCompleteAttribute;
-    wrapper?: boolean;
+    unwrap?: boolean;
     enumLabels?: Record<string, string>;
   }
 }
