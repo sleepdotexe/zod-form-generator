@@ -128,8 +128,8 @@ export const FormGenerator = <Schema extends z.$ZodObject>({
       return;
     }
 
-    startTransition(() => {
-      onSubmit(data, addErrors);
+    startTransition(async () => {
+      await onSubmit(data, addErrors);
     });
   };
 
