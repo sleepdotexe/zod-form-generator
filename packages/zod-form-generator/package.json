@@ -19,23 +19,14 @@
       "style": "./styles/tailwind.css"
     }
   },
-  "files": [
-    "dist",
-    "styles",
-    "README.md"
-  ],
+  "files": ["dist", "styles", "README.md"],
   "scripts": {
     "build": "tsc -b",
     "dev": "tsc -b --watch",
     "clean": "rm -rf dist *.tsbuildinfo",
     "lint": "tsc --noEmit"
   },
-  "keywords": [
-    "zod",
-    "form",
-    "generator",
-    "typescript"
-  ],
+  "keywords": ["zod", "form", "generator", "typescript"],
   "peerDependencies": {
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",

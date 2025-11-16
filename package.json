@@ -2,9 +2,7 @@
   "name": "zod-form-generator-monorepo",
   "version": "0.0.0",
   "private": true,
-  "workspaces": [
-    "packages/*"
-  ],
+  "workspaces": ["packages/*"],
   "scripts": {
     "build": "turbo run build",
     "dev": "turbo run dev",
