@@ -3,6 +3,7 @@ import { twMerge } from 'tailwind-merge';
 
 import type { ClassValue } from 'clsx';
 import type * as z from 'zod/v4/core';
+import type { DeepNullable, DeepPartial } from './types';
 
 export const boolAttribute = (bool: boolean) => (bool ? '' : undefined);
 

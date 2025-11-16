@@ -1,4 +1,4 @@
-@source '../dist/react/';
+@source "../dist/react/";
 
 @theme inline {
   --animate-fade-in: fadeIn 0.3s linear forwards;

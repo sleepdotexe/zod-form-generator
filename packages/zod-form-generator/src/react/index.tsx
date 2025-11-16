@@ -12,7 +12,7 @@ import { generateFields } from './generate-fields';
 
 import type React from 'react';
 import type { ComponentProps } from 'react';
-import type { ZodForm } from '../core/types';
+import type { DeepPartial, ZodForm } from '../core/types';
 import type { CustomFormElements, ShowErrorWhenFunction } from './generate-fields';
 
 export type FormSubmitHandler<Schema extends z.$ZodObject> = (
@@ -41,7 +41,7 @@ type FormGeneratorButtons = {
 export type FormGeneratorProps<Schema extends z.$ZodObject> = {
   schema: Schema;
   onSubmit: FormSubmitHandler<Schema>;
-  initialData?: DeepPartial<z.infer<Schema>> | null;
+  initialData?: DeepPartial<z.output<Schema>>;
   disabled?: boolean;
   buttons?: FormGeneratorButtons;
   customElements?: CustomFormElements;

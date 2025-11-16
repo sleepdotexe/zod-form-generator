@@ -8,8 +8,8 @@ import {
   getNestedValueByPath,
   setNestedValueByPath,
 } from '../core/util';
-import { toJSONSchema } from '../core/zod-helpers';
-import { Checkbox, Input } from './components/Fields';
+import { determineFieldStartingValue, toJSONSchema } from '../core/zod-helpers';
+import { Checkbox, Input, Select } from './components/Fields';
 import {
   FieldDescription,
   FieldError,
@@ -185,6 +185,7 @@ const _generateFields = <Schema extends z.$ZodObject>(
     const fieldIsDirty = formState.dirtyFields.has(dotPathToKey);
     const fieldIsRequired = required?.includes(key) && !nullable;
 
+    const valueWhenEmpty = determineFieldStartingValue(value, fieldIsRequired);
     const valueFromState = getNestedValueByPath(formState.data, [...pathToKey, key]);
     const valueFormattedForInput =
       typeof valueFromState === 'string'
@@ -219,7 +220,7 @@ const _generateFields = <Schema extends z.$ZodObject>(
         const newData: typeof prev.data = setNestedValueByPath(
           prev.data,
           [...pathToKey, key],
-          value
+          value?.toString().length === 0 ? valueWhenEmpty : value
         );
         return {
           ...prev,
@@ -230,7 +231,7 @@ const _generateFields = <Schema extends z.$ZodObject>(
         };
       });
 
-    const sharedProps: Partial<ComponentProps<typeof Input>> = {
+    const sharedProps: Partial<ComponentProps<typeof Input | typeof Select>> = {
       labelSlot: LabelSlot,
       descriptionSlot: DescriptionSlot,
       errorSlot: FieldErrorSlot,
@@ -245,7 +246,8 @@ const _generateFields = <Schema extends z.$ZodObject>(
       disabled: formDisabled || readOnly,
       showRequiredAsterisk,
       unwrap,
-      onChange: (e) => setValueInState(e.target.value),
+      onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) =>
+        setValueInState(e.target.value),
       onBlur: () =>
         setFormState((prev) => {
           if (prev.hasAttemptedSubmit) {
@@ -288,21 +290,23 @@ const _generateFields = <Schema extends z.$ZodObject>(
           // );
         }
 
-        return null;
-
-        //   return (
-        //     <Select
-        //       {...(sharedProps as Partial<ComponentProps<typeof Select>>)}
-        //       key={key}
-        //       options={input.enum.map((enumValue) => ({
-        //         value: String(enumValue),
-        //         label:
-        //           (enumLabels as z.GlobalMeta["enumLabels"])?.[
-        //             String(enumValue)
-        //           ] ?? String(enumValue),
-        //       }))}
-        //     />
-        //   );
+        return (
+          <Select
+            {...(sharedProps as Partial<ComponentProps<typeof Select>>)}
+            key={key}
+          >
+            {input.enum.map((enumValue) => (
+              <option
+                className='text-black bg-white dark:text-white dark:bg-black'
+                key={String(enumValue)}
+                value={String(enumValue)}
+              >
+                {(enumLabels as z.GlobalMeta['enumLabels'])?.[String(enumValue)] ??
+                  String(enumValue)}
+              </option>
+            ))}
+          </Select>
+        );
       }
 
       const { format, inputType, pattern, minLength, maxLength } = input;
@@ -388,7 +392,7 @@ const _generateFields = <Schema extends z.$ZodObject>(
           onChange={(e) => {
             const parse = type === 'integer' ? parseInt : parseFloat;
             const parsedValue = parse(e.target.value);
-            setValueInState(Number.isNaN(parsedValue) ? null : parsedValue);
+            setValueInState(Number.isNaN(parsedValue) ? valueWhenEmpty : parsedValue);
           }}
           type='number'
         />
@@ -405,6 +409,7 @@ const _generateFields = <Schema extends z.$ZodObject>(
           key={key}
           onChange={(e) => setValueInState(e.target.checked)}
           placeholder={undefined}
+          required={false}
           type='checkbox'
         />
       );

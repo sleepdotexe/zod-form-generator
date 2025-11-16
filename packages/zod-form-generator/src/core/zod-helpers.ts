@@ -1,5 +1,7 @@
 import * as z from 'zod/v4/core';
 
+import type { DeepNullable } from './types';
+
 export const generateEmptyObjectFromSchema = <Schema extends z.$ZodObject>(
   schema: Schema
 ): DeepNullable<z.infer<Schema>> => {
@@ -27,9 +29,12 @@ export const generateEmptyObjectFromSchema = <Schema extends z.$ZodObject>(
         continue;
       }
 
+      const isRequired = jsonSchema.required?.includes(key);
+      const valueToSet = determineFieldStartingValue(value, isRequired);
+
       result = {
         ...result,
-        [key]: null,
+        [key]: valueToSet,
       };
     }
 
@@ -43,4 +48,28 @@ export const toJSONSchema = <Schema extends z.$ZodObject>(
   schema: Schema
 ): z.JSONSchema._JSONSchema => {
   return z.toJSONSchema(schema, { io: 'input' });
+};
+
+export const determineFieldStartingValue = (
+  field: z.JSONSchema.JSONSchema,
+  isInRequiredArray?: boolean
+): string | number | boolean | null | undefined => {
+  if (field.default !== undefined) {
+    return field.default as string | number;
+  }
+
+  if (field.nullable) {
+    return null;
+  }
+
+  if (!isInRequiredArray) {
+    return undefined;
+  }
+
+  switch (field.type) {
+    case 'boolean':
+      return false;
+    default:
+      return null;
+  }
 };

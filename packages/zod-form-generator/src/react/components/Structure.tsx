@@ -1,6 +1,7 @@
 import { cva } from 'class-variance-authority';
 
 import { cn } from '../../core/util';
+import { ErrorIcon } from './Icons';
 
 import type { VariantProps } from 'class-variance-authority';
 import type { Component } from '../../core/types';
@@ -23,12 +24,13 @@ export const FormError: Component<'p'> = ({ className, children, ...props }) => 
   return (
     <p
       className={cn(
-        'text-red-600 bg-red-100/50 dark:bg-red-950/50 dark:text-red-400 border border-red-300 dark:border-red-900 px-4 py-3 rounded-md text-xs font-medium motion-safe:animate-fade-in',
+        'flex gap-3 text-red-600 bg-red-100/50 dark:bg-red-950/50 dark:text-red-400 border border-red-300 dark:border-red-900 px-4 py-3 rounded-md text-xs font-medium motion-safe:animate-fade-in',
         className
       )}
       {...props}
     >
-      {children}
+      <ErrorIcon className='w-[1.5em] -mt-px h-auto' />
+      <span>{children}</span>
     </p>
   );
 };
@@ -103,12 +105,13 @@ export const FieldError: Component<'p'> = ({ className, children, ...props }) =>
   return (
     <p
       className={cn(
-        'text-red-600 dark:text-red-400 text-xs font-medium motion-safe:animate-fade-in',
+        'flex gap-3 text-red-600 dark:text-red-400 text-xs font-medium motion-safe:animate-fade-in',
         className
       )}
       {...props}
     >
-      {children}
+      <ErrorIcon className='w-[1.5em] -mt-px h-auto' />
+      <span>{children}</span>
     </p>
   );
 };
