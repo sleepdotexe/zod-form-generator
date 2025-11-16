@@ -10,16 +10,38 @@
     "includes": ["**", "!node_modules", "!.next", "!dist", "!build"]
   },
   "formatter": {
+    "attributePosition": "multiline",
+    "bracketSameLine": false,
+    "bracketSpacing": true,
     "enabled": true,
+    "expand": "auto",
     "indentStyle": "space",
-    "indentWidth": 2
+    "indentWidth": 2,
+    "lineEnding": "lf",
+    "lineWidth": 90
   },
   "linter": {
     "enabled": true,
     "rules": {
       "recommended": true,
+      "style": {
+        "useImportType": {
+          "level": "on",
+          "options": {
+            "style": "separatedType"
+          }
+        },
+        "useBlockStatements": {
+          "level": "error",
+          "fix": "safe",
+          "options": {}
+        }
+      },
       "suspicious": {
         "noUnknownAtRules": "off"
+      },
+      "security": {
+        "noDangerouslySetInnerHtml": "off"
       }
     },
     "domains": {
@@ -27,10 +49,74 @@
       "react": "recommended"
     }
   },
+  "javascript": {
+    "formatter": {
+      "arrowParentheses": "always",
+      "jsxQuoteStyle": "single",
+      "operatorLinebreak": "after",
+      "quoteProperties": "asNeeded",
+      "quoteStyle": "single",
+      "semicolons": "always",
+      "trailingCommas": "es5"
+    },
+    "parser": {
+      "jsxEverywhere": false
+    }
+  },
+  "css": {
+    "formatter": {
+      "enabled": true,
+      "quoteStyle": "double"
+    },
+    "linter": {
+      "enabled": true
+    },
+    "parser": {
+      "cssModules": true
+    }
+  },
   "assist": {
     "actions": {
       "source": {
-        "organizeImports": "on"
+        "organizeImports": {
+          "level": "on",
+          "options": {
+            "groups": [
+              ":BLANK_LINE:",
+              { "source": ":URL:", "type": false },
+              ":BLANK_LINE:",
+              { "source": ":PACKAGE:", "type": false },
+              { "source": ":PACKAGE_WITH_PROTOCOL:", "type": false },
+              ":BLANK_LINE:",
+              { "source": ":BUN:", "type": false },
+              { "source": ":NODE:", "type": false },
+              ":BLANK_LINE:",
+              { "source": "^@/components/ui", "type": false },
+              { "source": "^@/components", "type": false },
+              { "source": "^@/app", "type": false },
+              ":BLANK_LINE:",
+              { "source": "^@/utils", "type": false },
+              ":BLANK_LINE:",
+              { "source": "^@/config", "type": false },
+              { "source": "^@/fonts", "type": false },
+              ":BLANK_LINE:",
+              { "source": ":PATH:", "type": false },
+              ":BLANK_LINE:",
+              { "type": false },
+              ":BLANK_LINE:",
+              "^@/schemas",
+              "^@/types",
+              { "type": true },
+              ":BLANK_LINE:",
+              "^@/public",
+              "**",
+              ":BLANK_LINE:"
+            ]
+          }
+        },
+        "useSortedAttributes": "on",
+        "useSortedKeys": "off",
+        "useSortedProperties": "on"
       }
     }
   }

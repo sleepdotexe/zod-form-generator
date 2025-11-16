@@ -1,20 +1,22 @@
-import React from "react";
-import type * as z from "zod/v4/core";
-import type { Component } from "../../core/types";
-import { FieldDescription, FieldError, FieldLabel } from "./Structure";
-import { cn } from "../../core/util";
+import { useId } from 'react';
+
+import { cn } from '../../core/util';
+import { FieldDescription, FieldError, FieldLabel } from './Structure';
+
+import type * as z from 'zod/v4/core';
+import type { Component } from '../../core/types';
 
 export type BaseInputProps = {
   label?: string;
   labelSlot?: typeof FieldLabel;
   description?: string;
   descriptionSlot?: typeof FieldDescription;
-  errors?: z.$ZodError["issues"];
+  errors?: z.$ZodError['issues'];
   errorSlot?: typeof FieldError;
   showRequiredAsterisk?: boolean;
 };
 
-export const Input: Component<"input", BaseInputProps> = ({
+export const Input: Component<'input', BaseInputProps> = ({
   id: providedId,
   className,
   label,
@@ -26,15 +28,18 @@ export const Input: Component<"input", BaseInputProps> = ({
   showRequiredAsterisk,
   ...props
 }) => {
-  const generatedId = React.useId();
+  const generatedId = useId();
   const id = providedId ?? generatedId;
 
   return (
-    <div className="group flex flex-col gap-2">
+    <div className='group flex flex-col gap-2'>
       {(label || description) && (
         <div>
           {label && (
-            <LabelSlot htmlFor={id} showRequiredAsterisk={showRequiredAsterisk}>
+            <LabelSlot
+              htmlFor={id}
+              showRequiredAsterisk={showRequiredAsterisk}
+            >
               {label}
             </LabelSlot>
           )}
@@ -42,18 +47,18 @@ export const Input: Component<"input", BaseInputProps> = ({
         </div>
       )}
       <input
-        id={id}
         className={cn(
-          "border border-neutral-300 dark:border-neutral-700 rounded-md px-4 py-2.5 text-sm transition-colors duration-200",
-          !!errors?.length && "border-red-400 dark:border-red-700",
+          'border border-neutral-300 dark:border-neutral-700 rounded-md px-4 py-2.5 text-sm transition-colors duration-200',
+          !!errors?.length && 'border-red-400 dark:border-red-700',
           className
         )}
+        id={id}
         {...props}
       />
       {!!errors?.length && (
-        <div className="flex flex-col gap-1 mb-1">
+        <div className='flex flex-col gap-1 mb-1'>
           {errors.map((error) => (
-            <ErrorSlot key={error.code + error.message + error.path.join(".")}>
+            <ErrorSlot key={error.code + error.message + error.path.join('.')}>
               {error.message}
             </ErrorSlot>
           ))}

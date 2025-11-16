@@ -1,5 +1,5 @@
-import React from "react";
-import * as z from "zod/v4/core";
+import type React from "react";
+import type * as z from "zod/v4/core";
 
 declare module "react" {
   interface HTMLAttributes<T> {
@@ -12,7 +12,7 @@ export type Component<
     | keyof React.JSX.IntrinsicElements
     | React.JSXElementConstructor<unknown>,
   CustomProps = object,
-  OmitProps extends keyof (React.ComponentProps<Type> & CustomProps) = never
+  OmitProps extends keyof (React.ComponentProps<Type> & CustomProps) = never,
 > = React.FC<Omit<React.ComponentProps<Type>, OmitProps> & CustomProps>;
 
 export type ZodForm<Schema extends z.$ZodObject> = {
@@ -31,6 +31,7 @@ declare module "zod/v4/core" {
     inputMode?: React.HTMLAttributes<HTMLInputElement>["inputMode"];
     placeholder?: string;
     autoComplete?: React.HTMLInputAutoCompleteAttribute;
+    wrapper?: boolean;
     enumLabels?: Record<string, string>;
   }
 }
