@@ -77,7 +77,8 @@ export const FieldLabel: Component<'label', { showRequiredAsterisk?: boolean }> 
     <label
       className={cn(
         'font-semibold text-sm m-0 group-has-required:after:ml-0.5 group-has-required:after:text-red-600 dark:group-has-required:after:text-red-400 cursor-pointer group-has-disabled:cursor-auto',
-        showRequiredAsterisk && "group-has-required:after:content-['*']",
+        showRequiredAsterisk &&
+          "group-has-required:after:content-['*'/''] after:[speak:none]",
         className
       )}
       {...props}

@@ -43,7 +43,7 @@ const InputWrapper: Component<'div', { unwrap?: boolean }> = ({
 };
 
 const inputStyles = cva(
-  'rounded-md border border-neutral-300 dark:border-neutral-700 duration-200 focus:outline-none focus:border-neutral-500 dark:focus:border-neutral-300 appearance-none transition-all',
+  'rounded-md border border-neutral-300 dark:border-neutral-700 duration-200 focus:outline-none appearance-none transition-all',
   {
     variants: {
       variant: {
@@ -80,6 +80,7 @@ export const Input: Component<'input', BaseInputProps, 'onChange'> = ({
   ...props
 }) => {
   const generatedId = useId();
+  const errorsId = useId();
   const id = providedId ?? generatedId;
 
   const variant: VariantProps<typeof inputStyles>['variant'] =
@@ -102,6 +103,7 @@ export const Input: Component<'input', BaseInputProps, 'onChange'> = ({
       )}
 
       <input
+        aria-describedby={errors?.length ? errorsId : undefined}
         className={cn(
           inputStyles({
             inputType: 'field',
@@ -116,7 +118,10 @@ export const Input: Component<'input', BaseInputProps, 'onChange'> = ({
       {children}
 
       {!!errors?.length && (
-        <div className='flex flex-col gap-1 mb-1'>
+        <div
+          className='flex flex-col gap-1 mb-1'
+          id={errorsId}
+        >
           {errors.map((error) => (
             <ErrorSlot key={error.code + error.message + error.path.join('.')}>
               {error.message}
@@ -176,6 +181,7 @@ export const PhoneInput: Component<
   ...props
 }) => {
   const generatedId = useId();
+  const errorsId = useId();
   const id = providedId ?? generatedId;
 
   const [phone, setPhone] = useState<PhoneNumber>({
@@ -250,6 +256,8 @@ export const PhoneInput: Component<
 
       <div className='flex items-stretch justify-start'>
         <SelectSlot
+          aria-label='Phone country code'
+          autoComplete='tel-country-code'
           className='min-w-36 shrink-0 rounded-r-none'
           forceErrorStyles={forceErrorStyles || !!errors?.length}
           onChange={(e) => handleChange({ countryCode: e.target.value as CountryCode })}
@@ -276,7 +284,10 @@ export const PhoneInput: Component<
       </div>
 
       {!!errors?.length && (
-        <div className='flex flex-col gap-1 mb-1'>
+        <div
+          className='flex flex-col gap-1 mb-1'
+          id={errorsId}
+        >
           {errors.map((error) => (
             <ErrorSlot key={error.code + error.message + error.path.join('.')}>
               {error.message}
@@ -313,6 +324,7 @@ export const Select: Component<
   ...props
 }) => {
   const generatedId = useId();
+  const errorsId = useId();
   const id = providedId ?? generatedId;
 
   const defaultValue = showUnselectableDefault ? (
@@ -361,12 +373,18 @@ export const Select: Component<
           {children}
         </select>
         <span className='inline-block w-4 h-auto absolute top-1/2 right-3 -translate-y-1/2 pointer-events-none select-none'>
-          <ChevronIcon className='w-full' />
+          <ChevronIcon
+            aria-hidden
+            className='w-full'
+          />
         </span>
       </div>
 
       {!!errors?.length && (
-        <div className='flex flex-col gap-1 mb-1'>
+        <div
+          className='flex flex-col gap-1 mb-1'
+          id={errorsId}
+        >
           {errors.map((error) => (
             <ErrorSlot key={error.code + error.message + error.path.join('.')}>
               {error.message}
@@ -395,6 +413,7 @@ export const Checkbox: Component<'input', BaseInputProps, 'onChange'> = ({
   ...props
 }) => {
   const generatedId = useId();
+  const errorsId = useId();
   const id = providedId ?? generatedId;
 
   const variant: VariantProps<typeof inputStyles>['variant'] =
@@ -410,11 +429,12 @@ export const Checkbox: Component<'input', BaseInputProps, 'onChange'> = ({
               variant,
             }),
             'has-focus-visible:ring-2 ring-offset-2 ring-zfg-primary',
-            checked && 'bg-zfg-primary border-zfg-primary',
+            checked && 'bg-zfg-primary border-zfg-primary dark:border-zfg-primary',
             className
           )}
         >
           <CheckIcon
+            aria-hidden
             className={cn(
               'absolute w-3 h-auto top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-zfg-primary-contrast opacity-0 transition-opacity duration-200',
               checked && 'opacity-100'
@@ -446,7 +466,10 @@ export const Checkbox: Component<'input', BaseInputProps, 'onChange'> = ({
       {children}
 
       {!!errors?.length && (
-        <div className='flex flex-col gap-1 mb-1'>
+        <div
+          className='flex flex-col gap-1 mb-1'
+          id={errorsId}
+        >
           {errors.map((error) => (
             <ErrorSlot key={error.code + error.message + error.path.join('.')}>
               {error.message}
