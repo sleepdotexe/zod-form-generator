@@ -133,11 +133,13 @@ export const Input: Component<'input', BaseInputProps, 'onChange'> = ({
   );
 };
 
-const countries = getCountries().map((c) => ({
-  countryCode: c,
-  name: new Intl.DisplayNames(['en'], { type: 'region' }).of(c),
-  callingCode: getCountryCallingCode(c),
-}));
+const countries = getCountries()
+  .map((c) => ({
+    countryCode: c,
+    name: new Intl.DisplayNames(['en'], { type: 'region' }).of(c),
+    callingCode: getCountryCallingCode(c),
+  }))
+  .sort((a, b) => (a.name && b.name ? a.name.localeCompare(b.name) : 0));
 
 const mapCountriesToOptions = (c: typeof countries) =>
   c.map(({ countryCode, name, callingCode }) => (
