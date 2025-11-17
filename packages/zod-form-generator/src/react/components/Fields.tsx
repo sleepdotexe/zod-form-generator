@@ -1,11 +1,20 @@
+'use client';
+
 import { cva } from 'class-variance-authority';
-import { Fragment, useId } from 'react';
+import {
+  AsYouType,
+  getCountries,
+  getCountryCallingCode,
+  parsePhoneNumberWithError,
+} from 'libphonenumber-js';
+import { Fragment, useId, useState } from 'react';
 
 import { cn } from '../../core/util';
 import { CheckIcon, ChevronIcon } from './Icons';
 import { FieldDescription, FieldError, FieldLabel } from './Structure';
 
 import type { VariantProps } from 'class-variance-authority';
+import type { CountryCode } from 'libphonenumber-js';
 import type * as z from 'zod/v4/core';
 import type { Component } from '../../core/types';
 
@@ -17,25 +26,20 @@ export type BaseInputProps = {
   descriptionSlot?: typeof FieldDescription;
   errors?: z.$ZodError['issues'];
   errorSlot?: typeof FieldError;
+  forceErrorStyles?: boolean;
   showRequiredAsterisk?: boolean;
+  onChange?: (e: { target: { value?: string; checked?: boolean } }) => void;
 };
 
 const InputWrapper: Component<'div', { unwrap?: boolean }> = ({
   unwrap,
-  className,
   children,
   ...props
 }) => {
   const Slot = unwrap ? Fragment : 'div';
+  props.className = cn('group flex flex-col gap-2', props.className);
 
-  return (
-    <Slot
-      className={unwrap ? undefined : cn('group flex flex-col gap-2', className)}
-      {...props}
-    >
-      {children}
-    </Slot>
-  );
+  return <Slot {...(unwrap ? {} : props)}>{children}</Slot>;
 };
 
 const inputStyles = cva(
@@ -60,10 +64,10 @@ const inputStyles = cva(
   }
 );
 
-export const Input: Component<'input', BaseInputProps> = ({
+export const Input: Component<'input', BaseInputProps, 'onChange'> = ({
   id: providedId,
   className,
-  children: _,
+  children,
   unwrap,
   label,
   labelSlot: LabelSlot = FieldLabel,
@@ -71,15 +75,15 @@ export const Input: Component<'input', BaseInputProps> = ({
   descriptionSlot: DescriptionSlot = FieldDescription,
   errors,
   errorSlot: ErrorSlot = FieldError,
+  forceErrorStyles = false,
   showRequiredAsterisk,
   ...props
 }) => {
   const generatedId = useId();
   const id = providedId ?? generatedId;
 
-  const variant: VariantProps<typeof inputStyles>['variant'] = errors?.length
-    ? 'error'
-    : 'default';
+  const variant: VariantProps<typeof inputStyles>['variant'] =
+    errors?.length || forceErrorStyles ? 'error' : 'default';
 
   return (
     <InputWrapper unwrap={unwrap}>
@@ -109,6 +113,161 @@ export const Input: Component<'input', BaseInputProps> = ({
         {...props}
       />
 
+      {children}
+
+      {!!errors?.length && (
+        <div className='flex flex-col gap-1 mb-1'>
+          {errors.map((error) => (
+            <ErrorSlot key={error.code + error.message + error.path.join('.')}>
+              {error.message}
+            </ErrorSlot>
+          ))}
+        </div>
+      )}
+    </InputWrapper>
+  );
+};
+
+const countries = getCountries().map((c) => ({
+  countryCode: c,
+  name: new Intl.DisplayNames(['en'], { type: 'region' }).of(c),
+  callingCode: getCountryCallingCode(c),
+}));
+
+const mapCountriesToOptions = (c: typeof countries) =>
+  c.map(({ countryCode, name, callingCode }) => (
+    <option
+      key={countryCode}
+      value={countryCode}
+    >
+      {name} (+{callingCode})
+    </option>
+  ));
+
+type PhoneNumber = { countryCode: CountryCode; number: string };
+
+export const PhoneInput: Component<
+  'input',
+  BaseInputProps & { defaultCountry?: CountryCode; commonCountries?: CountryCode[] },
+  'onChange'
+> = ({
+  id: providedId,
+  className,
+  children: _,
+  unwrap,
+  label,
+  labelSlot: LabelSlot = FieldLabel,
+  description,
+  descriptionSlot: DescriptionSlot = FieldDescription,
+  errors,
+  errorSlot: ErrorSlot = FieldError,
+  forceErrorStyles = false,
+  showRequiredAsterisk,
+  onChange,
+  defaultCountry = 'US',
+  commonCountries = [],
+  ...props
+}) => {
+  const generatedId = useId();
+  const id = providedId ?? generatedId;
+
+  const [phone, setPhone] = useState<PhoneNumber>({
+    countryCode: defaultCountry,
+    number: '',
+  });
+
+  const handleChange = (phoneInput: Partial<PhoneNumber>) => {
+    let { countryCode, number } = {
+      ...phone,
+      ...phoneInput,
+    };
+
+    try {
+      const {
+        number: e164Number,
+        nationalNumber,
+        country,
+      } = parsePhoneNumberWithError(number, countryCode);
+
+      if (country && country !== countryCode) {
+        countryCode = country;
+        number = nationalNumber;
+      }
+
+      onChange?.({ target: { value: e164Number } });
+    } catch {
+      onChange?.({ target: { value: number } });
+    }
+
+    if (!(number.includes('(') && !number.includes(')'))) {
+      number = new AsYouType(countryCode).input(number);
+    }
+
+    setPhone({
+      countryCode,
+      number,
+    });
+  };
+
+  const commonCountriesGroup = commonCountries.length ? (
+    <optgroup>
+      {mapCountriesToOptions(
+        countries.filter((c) => commonCountries.includes(c.countryCode))
+      )}
+    </optgroup>
+  ) : null;
+
+  const restCountriesGroup = (
+    <optgroup>
+      {mapCountriesToOptions(
+        countries.filter((c) => !commonCountries.includes(c.countryCode))
+      )}
+    </optgroup>
+  );
+
+  return (
+    <InputWrapper unwrap={unwrap}>
+      {(label || description) && (
+        <div>
+          {label && (
+            <LabelSlot
+              htmlFor={id}
+              showRequiredAsterisk={showRequiredAsterisk}
+            >
+              {label}
+            </LabelSlot>
+          )}
+          {description && <DescriptionSlot>{description}</DescriptionSlot>}
+        </div>
+      )}
+
+      <div className='flex items-stretch justify-start'>
+        <Select
+          className='min-w-36 shrink-0 rounded-r-none'
+          forceErrorStyles={forceErrorStyles || !!errors?.length}
+          onChange={(e) => handleChange({ countryCode: e.target.value as CountryCode })}
+          showUnselectableDefault={false}
+          unwrap
+          value={phone.countryCode}
+        >
+          {commonCountriesGroup}
+          {restCountriesGroup}
+        </Select>
+
+        <Input
+          {...props}
+          autoComplete={props.autoComplete ?? 'tel-national'}
+          className={cn('w-full shrink border-l-0 rounded-l-none', className)}
+          forceErrorStyles={forceErrorStyles || !!errors?.length}
+          id={id}
+          inputMode='tel'
+          onChange={(e) => handleChange({ number: e.target.value })}
+          type='tel'
+          unwrap
+          value={phone.number}
+        />
+      </div>
+
       {!!errors?.length && (
         <div className='flex flex-col gap-1 mb-1'>
           {errors.map((error) => (
@@ -127,7 +286,8 @@ export const Select: Component<
   BaseInputProps & {
     showUnselectableDefault?: boolean;
     unselectableOptionLabel?: string;
-  }
+  },
+  'onChange'
 > = ({
   id: providedId,
   className,
@@ -139,6 +299,7 @@ export const Select: Component<
   descriptionSlot: DescriptionSlot = FieldDescription,
   errors,
   errorSlot: ErrorSlot = FieldError,
+  forceErrorStyles = false,
   showRequiredAsterisk,
   showUnselectableDefault = true,
   unselectableOptionLabel = 'Select an option...',
@@ -157,9 +318,8 @@ export const Select: Component<
     </option>
   ) : null;
 
-  const variant: VariantProps<typeof inputStyles>['variant'] = errors?.length
-    ? 'error'
-    : 'default';
+  const variant: VariantProps<typeof inputStyles>['variant'] =
+    errors?.length || forceErrorStyles ? 'error' : 'default';
 
   return (
     <InputWrapper unwrap={unwrap}>
@@ -211,10 +371,10 @@ export const Select: Component<
   );
 };
 
-export const Checkbox: Component<'input', BaseInputProps> = ({
+export const Checkbox: Component<'input', BaseInputProps, 'onChange'> = ({
   id: providedId,
   className,
-  children: _,
+  children,
   unwrap,
   label,
   labelSlot: LabelSlot = FieldLabel,
@@ -222,6 +382,7 @@ export const Checkbox: Component<'input', BaseInputProps> = ({
   descriptionSlot: DescriptionSlot = FieldDescription,
   errors,
   errorSlot: ErrorSlot = FieldError,
+  forceErrorStyles = false,
   checked,
   showRequiredAsterisk,
   ...props
@@ -229,9 +390,8 @@ export const Checkbox: Component<'input', BaseInputProps> = ({
   const generatedId = useId();
   const id = providedId ?? generatedId;
 
-  const variant: VariantProps<typeof inputStyles>['variant'] = errors?.length
-    ? 'error'
-    : 'default';
+  const variant: VariantProps<typeof inputStyles>['variant'] =
+    errors?.length || forceErrorStyles ? 'error' : 'default';
 
   return (
     <InputWrapper unwrap={unwrap}>
@@ -269,6 +429,8 @@ export const Checkbox: Component<'input', BaseInputProps> = ({
           </div>
         )}
       </div>
+
+      {children}
 
       {!!errors?.length && (
         <div className='flex flex-col gap-1 mb-1'>

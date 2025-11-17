@@ -9,7 +9,7 @@ import {
   setNestedValueByPath,
 } from '../core/util';
 import { determineFieldStartingValue, toJSONSchema } from '../core/zod-helpers';
-import { Checkbox, Input, Select } from './components/Fields';
+import { Checkbox, Input, PhoneInput, Select } from './components/Fields';
 import {
   FieldDescription,
   FieldError,
@@ -246,8 +246,7 @@ const _generateFields = <Schema extends z.$ZodObject>(
       disabled: formDisabled || readOnly,
       showRequiredAsterisk,
       unwrap,
-      onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) =>
-        setValueInState(e.target.value),
+      onChange: (e) => setValueInState(e.target.value),
       onBlur: () =>
         setFormState((prev) => {
           if (prev.hasAttemptedSubmit) {
@@ -313,27 +312,11 @@ const _generateFields = <Schema extends z.$ZodObject>(
 
       if (inputType === 'tel') {
         return (
-          <InputSlot
+          <PhoneInput
             {...sharedProps}
-            autoComplete={autoComplete ?? 'tel-national'}
-            inputMode='tel'
+            commonCountries={['US', 'CA', 'DE', 'GB', 'AU', 'NZ', 'JP']}
+            defaultCountry={defaultCountry}
             key={key}
-            onChange={(e) => {
-              let formattedValue = e.target.value;
-
-              // fixes a bug when trying to backspace numbers formatted with brackets/dashes
-              // if you backspace a value like "(03)", the new value is "(03"
-              // which then gets formatted back to "(03)" again, making it impossible to delete
-              // this removes both brackets if there isn't an opening and closing bracket present
-              if (e.target.value.includes('(') && !e.target.value.includes(')')) {
-                formattedValue = e.target.value;
-              } else {
-                formattedValue = new AsYouType(defaultCountry).input(e.target.value);
-              }
-
-              setValueInState(formattedValue);
-            }}
-            type='tel'
           />
         );
       }
@@ -391,7 +374,7 @@ const _generateFields = <Schema extends z.$ZodObject>(
           min={minimum}
           onChange={(e) => {
             const parse = type === 'integer' ? parseInt : parseFloat;
-            const parsedValue = parse(e.target.value);
+            const parsedValue = e.target.value && parse(e.target.value.toString());
             setValueInState(Number.isNaN(parsedValue) ? valueWhenEmpty : parsedValue);
           }}
           type='number'

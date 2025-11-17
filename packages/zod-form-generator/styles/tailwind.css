@@ -1,10 +1,10 @@
 @source "../dist/react/";
 
 @theme inline {
-  --animate-fade-in: fadeIn 0.3s linear forwards;
+  --animate-zfg-fade-in: zfgFadeIn 0.3s linear forwards;
 }
 
-@keyframes fadeIn {
+@keyframes zfgFadeIn {
   from {
     opacity: 0;
   }

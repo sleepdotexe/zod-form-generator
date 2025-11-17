@@ -183,7 +183,9 @@ export const FormGenerator = <Schema extends z.$ZodObject>({
         <Buttons
           buttonSlot={button}
           buttons={buttons}
-          disabled={disabled}
+          disabled={
+            disabled || (formState.hasAttemptedSubmit && !!formState.errors?.length)
+          }
           isLoading={isLoading}
           setFormState={setFormState}
         />

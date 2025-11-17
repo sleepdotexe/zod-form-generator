@@ -24,7 +24,7 @@ export const FormError: Component<'p'> = ({ className, children, ...props }) => 
   return (
     <p
       className={cn(
-        'flex gap-3 text-red-600 bg-red-100/50 dark:bg-red-950/50 dark:text-red-400 border border-red-300 dark:border-red-900 px-4 py-3 rounded-md text-xs font-medium motion-safe:animate-fade-in',
+        'flex gap-3 text-red-600 bg-red-100/50 dark:bg-red-950/50 dark:text-red-400 border border-red-300 dark:border-red-900 px-4 py-3 rounded-md text-xs font-medium motion-safe:animate-zfg-fade-in',
         className
       )}
       {...props}
@@ -105,7 +105,7 @@ export const FieldError: Component<'p'> = ({ className, children, ...props }) =>
   return (
     <p
       className={cn(
-        'flex gap-3 text-red-600 dark:text-red-400 text-xs font-medium motion-safe:animate-fade-in',
+        'flex gap-2 text-red-600 dark:text-red-500 text-xs font-medium motion-safe:animate-zfg-fade-in',
         className
       )}
       {...props}
