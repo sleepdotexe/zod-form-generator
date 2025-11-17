@@ -143,6 +143,7 @@ const mapCountriesToOptions = (c: typeof countries) =>
   c.map(({ countryCode, name, callingCode }) => (
     <option
       key={countryCode}
+      suppressHydrationWarning
       value={countryCode}
     >
       {name} (+{callingCode})
