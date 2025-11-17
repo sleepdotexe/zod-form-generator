@@ -43,7 +43,7 @@ const InputWrapper: Component<'div', { unwrap?: boolean }> = ({
 };
 
 const inputStyles = cva(
-  'rounded-md border border-neutral-300 dark:border-neutral-700 duration-200 focus:outline-none focus:border-neutral-500 dark:focus:border-neutral-300 appearance-none',
+  'rounded-md border border-neutral-300 dark:border-neutral-700 duration-200 focus:outline-none focus:border-neutral-500 dark:focus:border-neutral-300 appearance-none transition-all',
   {
     variants: {
       variant: {
@@ -52,9 +52,9 @@ const inputStyles = cva(
       },
       inputType: {
         field:
-          'px-4 py-2.5 text-sm transition-colors disabled:bg-neutral-100 disabled:dark:bg-neutral-800 disabled:cursor-not-allowed',
+          'px-4 py-2.5 text-sm disabled:bg-neutral-100 disabled:dark:bg-neutral-800 disabled:cursor-not-allowed',
         checkbox:
-          'relative w-5 h-5 flex items-center justify-center shrink-0 transition-all has-disabled:bg-neutral-100 has-disabled:dark:bg-neutral-800 has-disabled:cursor-not-allowed',
+          'relative w-5 h-5 flex items-center justify-center shrink-0 has-disabled:bg-neutral-100 has-disabled:dark:bg-neutral-800 has-disabled:cursor-not-allowed',
       },
     },
     defaultVariants: {
@@ -148,7 +148,12 @@ type PhoneNumber = { countryCode: CountryCode; number: string };
 
 export const PhoneInput: Component<
   'input',
-  BaseInputProps & { defaultCountry?: CountryCode; commonCountries?: CountryCode[] },
+  BaseInputProps & {
+    defaultCountry?: CountryCode;
+    commonCountries?: CountryCode[];
+    inputSlot?: typeof Input;
+    selectSlot?: typeof Select;
+  },
   'onChange'
 > = ({
   id: providedId,
@@ -162,6 +167,8 @@ export const PhoneInput: Component<
   errors,
   errorSlot: ErrorSlot = FieldError,
   forceErrorStyles = false,
+  inputSlot: InputSlot = Input,
+  selectSlot: SelectSlot = Select,
   showRequiredAsterisk,
   onChange,
   defaultCountry = 'US',
@@ -242,7 +249,7 @@ export const PhoneInput: Component<
       )}
 
       <div className='flex items-stretch justify-start'>
-        <Select
+        <SelectSlot
           className='min-w-36 shrink-0 rounded-r-none'
           forceErrorStyles={forceErrorStyles || !!errors?.length}
           onChange={(e) => handleChange({ countryCode: e.target.value as CountryCode })}
@@ -252,9 +259,9 @@ export const PhoneInput: Component<
         >
           {commonCountriesGroup}
           {restCountriesGroup}
-        </Select>
+        </SelectSlot>
 
-        <Input
+        <InputSlot
           {...props}
           autoComplete={props.autoComplete ?? 'tel-national'}
           className={cn('w-full shrink border-l-0 rounded-l-none', className)}
@@ -402,11 +409,17 @@ export const Checkbox: Component<'input', BaseInputProps, 'onChange'> = ({
               inputType: 'checkbox',
               variant,
             }),
-            checked && 'bg-black border-black dark:bg-white dark:border-white',
+            'has-focus-visible:ring-2 ring-offset-2 ring-zfg-primary',
+            checked && 'bg-zfg-primary border-zfg-primary',
             className
           )}
         >
-          <CheckIcon className='absolute w-3 h-auto top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-white dark:text-black' />
+          <CheckIcon
+            className={cn(
+              'absolute w-3 h-auto top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-zfg-primary-contrast opacity-0 transition-opacity duration-200',
+              checked && 'opacity-100'
+            )}
+          />
           <input
             checked={checked}
             className='absolute inset-0 opacity-0 cursor-pointer focus:outline-none disabled:cursor-not-allowed'

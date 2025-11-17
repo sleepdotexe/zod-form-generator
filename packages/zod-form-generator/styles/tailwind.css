@@ -1,7 +1,30 @@
 @source "../dist/react/";
 
+:root {
+  --zfg-base-primary: #000;
+  --zfg-base-primary-hover: #222;
+  --zfg-base-primary-active: #444;
+  --zfg-base-primary-contrast: #fff;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --zfg-base-primary: #fff;
+    --zfg-base-primary-hover: #ddd;
+    --zfg-base-primary-active: #bbb;
+    --zfg-base-primary-contrast: #000;
+  }
+}
+
 @theme inline {
   --animate-zfg-fade-in: zfgFadeIn 0.3s linear forwards;
+  --color-zfg-primary: var(--zfg-primary, var(--zfg-base-primary));
+  --color-zfg-primary-hover: var(--zfg-primary-hover, var(--zfg-base-primary-hover));
+  --color-zfg-primary-active: var(--zfg-primary-active, var(--zfg-base-primary-active));
+  --color-zfg-primary-contrast: var(
+    --zfg-primary-contrast,
+    var(--zfg-base-primary-contrast)
+  );
 }
 
 @keyframes zfgFadeIn {

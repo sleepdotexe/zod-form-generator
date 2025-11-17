@@ -18,10 +18,9 @@ import {
   FormError,
 } from './components/Structure';
 
-import type { CountryCode } from 'libphonenumber-js';
 import type { ComponentProps, Dispatch, SetStateAction } from 'react';
 import type { ZodForm } from '../core/types';
-import type { FormGeneratorOptions } from '.';
+import type { FormGenerator } from '.';
 import type { Button, ButtonContainer, Form, FormLegend } from './components/Structure';
 
 export type CustomFormElements = Partial<{
@@ -31,6 +30,7 @@ export type CustomFormElements = Partial<{
   label: typeof FieldLabel;
   description: typeof FieldDescription;
   input: typeof Input;
+  select: typeof Select;
   checkbox: typeof Checkbox;
   fieldError: typeof FieldError;
   formError: typeof FormError;
@@ -43,12 +43,7 @@ type GenerateFieldsProps<Schema extends z.$ZodObject> = {
   formState: ZodForm<Schema>;
   setFormState: Dispatch<SetStateAction<ZodForm<Schema>>>;
   disabled?: boolean;
-  defaultCountry?: CountryCode;
-  customElements?: CustomFormElements;
-} & Pick<
-  FormGeneratorOptions,
-  'showFieldErrors' | 'showFieldErrorWhen' | 'showRequiredAsterisk'
->;
+} & Pick<ComponentProps<typeof FormGenerator>, 'customElements' | 'options'>;
 
 export const generateFields = <Schema extends z.$ZodObject>(
   props: GenerateFieldsProps<Schema>
@@ -95,11 +90,8 @@ const _generateFields = <Schema extends z.$ZodObject>(
     setFormState,
     disabled: formDisabled,
     pathToKey = [],
-    defaultCountry = 'US',
     customElements = {},
-    showRequiredAsterisk,
-    showFieldErrors = 'all',
-    showFieldErrorWhen = showErrorWhenDefault,
+    options,
   } = props;
   if (typeof jsonSchema === 'boolean') {
     return null;
@@ -116,10 +108,18 @@ const _generateFields = <Schema extends z.$ZodObject>(
     label: LabelSlot = FieldLabel,
     description: DescriptionSlot = FieldDescription,
     input: InputSlot = Input,
+    select: SelectSlot = Select,
     checkbox: CheckboxSlot = Checkbox,
     formError: FormErrorSlot = FormError,
     fieldError: FieldErrorSlot = FieldError,
   } = customElements;
+
+  const {
+    showRequiredAsterisk = true,
+    showFieldErrors,
+    showFieldErrorWhen = showErrorWhenDefault,
+    phoneFields,
+  } = options ?? {};
 
   return Object.entries(properties).map(([key, value]) => {
     if (typeof value === 'boolean') {
@@ -290,7 +290,7 @@ const _generateFields = <Schema extends z.$ZodObject>(
         }
 
         return (
-          <Select
+          <SelectSlot
             {...(sharedProps as Partial<ComponentProps<typeof Select>>)}
             key={key}
           >
@@ -304,19 +304,23 @@ const _generateFields = <Schema extends z.$ZodObject>(
                   String(enumValue)}
               </option>
             ))}
-          </Select>
+          </SelectSlot>
         );
       }
 
       const { format, inputType, pattern, minLength, maxLength } = input;
 
       if (inputType === 'tel') {
+        const { commonCountries, defaultCountry = 'US' } = phoneFields ?? {};
+
         return (
           <PhoneInput
             {...sharedProps}
-            commonCountries={['US', 'CA', 'DE', 'GB', 'AU', 'NZ', 'JP']}
+            commonCountries={commonCountries}
             defaultCountry={defaultCountry}
+            inputSlot={InputSlot}
             key={key}
+            selectSlot={SelectSlot}
           />
         );
       }

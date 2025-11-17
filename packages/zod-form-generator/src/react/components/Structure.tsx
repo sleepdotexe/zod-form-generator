@@ -128,12 +128,12 @@ export const ButtonContainer: Component<'div'> = ({ className, children, ...prop
 };
 
 const buttonStlyes = cva(
-  'flex justify-center items-center gap-[0.8em] px-[2em] py-[0.75em] text-center whitespace-nowrap rounded-md max-w-full text-sm font-semibold cursor-pointer disabled:cursor-not-allowed disabled:opacity-50 border-2 border-transparent transition-colors duration-200',
+  'flex justify-center items-center gap-[0.8em] px-[2em] py-[0.75em] whitespace-nowrap rounded-md max-w-full text-sm text-center text-zfg-primary font-semibold cursor-pointer disabled:cursor-not-allowed disabled:opacity-50 border-2 border-transparent transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-zfg-primary focus-visible:ring-offset-2',
   {
     variants: {
       variant: {
         filled:
-          'bg-black hover:bg-neutral-800 focus-visible:bg-neutral-800 active:bg-neutral-700 text-white dark:bg-white dark:hover:bg-neutral-200 dark:focus-visible:bg-neutral-200 dark:active:bg-neutral-300 dark:text-black',
+          'bg-zfg-primary hover:bg-zfg-primary-hover focus-visible:bg-zfg-primary-hover active:bg-zfg-primary-active text-zfg-primary-contrast',
         outline: 'border-current',
       },
     },

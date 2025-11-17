@@ -10,6 +10,7 @@ import { generateEmptyObjectFromSchema } from '../core/zod-helpers';
 import { Button, ButtonContainer, Form, FormError } from './components/Structure';
 import { generateFields } from './generate-fields';
 
+import type { CountryCode } from 'libphonenumber-js';
 import type React from 'react';
 import type { ComponentProps } from 'react';
 import type { DeepPartial, ZodForm } from '../core/types';
@@ -26,6 +27,10 @@ export type FormGeneratorOptions = Partial<{
   showFieldErrorWhen: ShowErrorWhenFunction;
   showRequiredAsterisk: boolean;
   preventLeavingWhenDirty: boolean;
+  phoneFields: Partial<{
+    defaultCountry: CountryCode;
+    commonCountries: CountryCode[];
+  }>;
 }>;
 
 export type FormGeneratorButton = {
@@ -83,13 +88,8 @@ export const FormGenerator = <Schema extends z.$ZodObject>({
     button,
   } = customElements;
 
-  const {
-    formErrorPosition = 'above_buttons',
-    preventLeavingWhenDirty = false,
-    showRequiredAsterisk = true,
-    showFieldErrors,
-    showFieldErrorWhen,
-  } = options;
+  const { formErrorPosition = 'above_buttons', preventLeavingWhenDirty = false } =
+    options;
 
   const addErrors: Parameters<FormSubmitHandler<Schema>>[1] = (issues) => {
     const mappedIssues: z.$ZodIssue[] = issues.map((issue) => ({
@@ -172,9 +172,7 @@ export const FormGenerator = <Schema extends z.$ZodObject>({
         setFormState,
         disabled,
         customElements,
-        showRequiredAsterisk,
-        showFieldErrors,
-        showFieldErrorWhen,
+        options,
       })}
 
       {children}
@@ -184,7 +182,9 @@ export const FormGenerator = <Schema extends z.$ZodObject>({
           buttonSlot={button}
           buttons={buttons}
           disabled={
-            disabled || (formState.hasAttemptedSubmit && !!formState.errors?.length)
+            disabled ||
+            (formState.hasAttemptedSubmit &&
+              !!formState.errors?.filter((issue) => issue.path.length > 0).length)
           }
           isLoading={isLoading}
           setFormState={setFormState}
