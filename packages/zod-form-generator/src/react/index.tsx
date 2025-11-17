@@ -35,9 +35,9 @@ export type FormGeneratorOptions = Partial<{
   }>;
 }>;
 
-export type FormGeneratorButton = {
+type FormGeneratorButton = {
   label: string;
-  onClick?: React.MouseEventHandler<HTMLButtonElement>;
+  props?: Omit<ComponentProps<typeof Button>, 'key' | 'children' | 'type'>;
 };
 
 type FormGeneratorButtons = {
@@ -226,14 +226,18 @@ const Buttons = <Schema extends z.$ZodObject>({
   isLoading,
   setFormState,
 }: ButtonsProps<Schema>) => {
-  const { submit, ...otherButtons } = buttons;
+  const {
+    submit: { label: submitLabel, props: submitProps },
+    ...otherButtons
+  } = buttons;
 
   return (
     <>
       <ButtonSlot
+        {...submitProps}
         disabled={disabled || isLoading}
         onClick={(e) => {
-          submit.onClick?.(e);
+          submitProps?.onClick?.(e);
           setFormState((prev) => ({
             ...prev,
             hasAttemptedSubmit: true,
@@ -241,17 +245,17 @@ const Buttons = <Schema extends z.$ZodObject>({
         }}
         type='submit'
       >
-        {isLoading ? 'Submitting...' : submit.label}
+        {isLoading ? 'Submitting...' : submitLabel}
       </ButtonSlot>
 
-      {Object.entries(otherButtons).map(([key, button]) => (
+      {Object.entries(otherButtons).map(([key, { label, props: buttonProps }]) => (
         <ButtonSlot
+          {...buttonProps}
           key={key}
-          onClick={button.onClick}
           type='button'
-          variant='outline'
+          variant={buttonProps?.variant ?? 'outline'}
         >
-          {button.label}
+          {label}
         </ButtonSlot>
       ))}
     </>

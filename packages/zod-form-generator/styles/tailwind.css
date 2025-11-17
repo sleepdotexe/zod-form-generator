@@ -1,6 +1,7 @@
 @source "../dist/react/";
 
 :root {
+  --zfg-base-text: #000;
   --zfg-base-primary: #000;
   --zfg-base-primary-hover: #222;
   --zfg-base-primary-active: #444;
@@ -9,6 +10,7 @@
 
 @media (prefers-color-scheme: dark) {
   :root {
+    --zfg-base-text: #fff;
     --zfg-base-primary: #fff;
     --zfg-base-primary-hover: #ddd;
     --zfg-base-primary-active: #bbb;
@@ -16,14 +18,28 @@
   }
 }
 
-[data-zfg-form] input,
-input::-webkit-outer-spin-button,
-input::-webkit-inner-spin-button {
-  @apply appearance-none;
+[data-zfg-form] {
+  & input,
+  & input::-webkit-outer-spin-button,
+  & input::-webkit-inner-spin-button {
+    @apply appearance-none;
+  }
+
+  & :-webkit-autofill,
+  & :-webkit-autofill:hover,
+  & :-webkit-autofill:focus,
+  & :-webkit-autofill:active {
+    -webkit-text-fill-color: var(--color-zfg-text);
+    -webkit-background-clip: text;
+    box-shadow: inset 0 0 20px 20px var(--tw-shadow-color);
+    transition: background-color 0s ease-in-out 50000s;
+    @apply bg-clip-text shadow-zfg-primary/15;
+  }
 }
 
 @theme inline {
   --animate-zfg-fade-in: zfgFadeIn 0.3s linear forwards;
+  --color-zfg-text: var(--zfg-text, var(--zfg-base-text));
   --color-zfg-primary: var(--zfg-primary, var(--zfg-base-primary));
   --color-zfg-primary-hover: var(--zfg-primary-hover, var(--zfg-base-primary-hover));
   --color-zfg-primary-active: var(--zfg-primary-active, var(--zfg-base-primary-active));

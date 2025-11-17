@@ -10,7 +10,7 @@ export const Form: Component<'form'> = ({ className, children, ...props }) => {
   return (
     <form
       className={cn(
-        'flex flex-col justify-start items-stretch gap-9 max-w-md w-full',
+        'flex flex-col justify-start items-stretch gap-9 max-w-md w-full text-zfg-text',
         className
       )}
       {...props}
@@ -134,7 +134,7 @@ const buttonStlyes = cva(
     variants: {
       variant: {
         filled:
-          'bg-zfg-primary hover:bg-zfg-primary-hover focus-visible:bg-zfg-primary-hover active:bg-zfg-primary-active text-zfg-primary-contrast',
+          'bg-zfg-primary not-disabled:hover:bg-zfg-primary-hover not-disabled:focus-visible:bg-zfg-primary-hover not-disabled:active:bg-zfg-primary-active text-zfg-primary-contrast',
         outline: 'border-current',
       },
     },
