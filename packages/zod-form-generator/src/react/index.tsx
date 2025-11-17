@@ -18,8 +18,9 @@ import type { CustomFormElements, ShowErrorWhenFunction } from './generate-field
 
 export type FormSubmitHandler<Schema extends z.$ZodObject> = (
   data: z.infer<Schema>,
-  addErrors: (issue: Pick<z.$ZodIssue, 'path' | 'message'>[]) => void
-) => Promise<unknown>;
+  addErrors: (issue: Pick<z.$ZodIssue, 'path' | 'message'>[]) => false
+  // biome-ignore lint/suspicious/noConfusingVoidType: User may implement the handler without returning a value.
+) => Promise<boolean | void>;
 
 export type FormGeneratorOptions = Partial<{
   formErrorPosition: 'top' | 'above_buttons' | 'bottom';
@@ -27,6 +28,7 @@ export type FormGeneratorOptions = Partial<{
   showFieldErrorWhen: ShowErrorWhenFunction;
   showRequiredAsterisk: boolean;
   preventLeavingWhenDirty: boolean;
+  resetFormAfterSubmission: boolean;
   phoneFields: Partial<{
     defaultCountry: CountryCode;
     commonCountries: CountryCode[];
@@ -69,9 +71,7 @@ export const FormGenerator = <Schema extends z.$ZodObject>({
     providedData ?? {}
   );
 
-  const [isLoading, startTransition] = useTransition();
-
-  const [formState, setFormState] = useState<ZodForm<Schema>>({
+  const initialState: ZodForm<Schema> = {
     data: initialData,
     errors: z.safeParse(schema, initialData).error?.issues ?? null,
     isDirty: false,
@@ -79,7 +79,10 @@ export const FormGenerator = <Schema extends z.$ZodObject>({
     dirtyFields: new Set(),
     touchedFields: new Set(),
     hasAttemptedSubmit: false,
-  });
+  };
+
+  const [isLoading, startTransition] = useTransition();
+  const [formState, setFormState] = useState<ZodForm<Schema>>(initialState);
 
   const {
     form: FormSlot = Form,
@@ -88,8 +91,11 @@ export const FormGenerator = <Schema extends z.$ZodObject>({
     button,
   } = customElements;
 
-  const { formErrorPosition = 'above_buttons', preventLeavingWhenDirty = false } =
-    options;
+  const {
+    formErrorPosition = 'above_buttons',
+    preventLeavingWhenDirty = false,
+    resetFormAfterSubmission = false,
+  } = options;
 
   const addErrors: Parameters<FormSubmitHandler<Schema>>[1] = (issues) => {
     const mappedIssues: z.$ZodIssue[] = issues.map((issue) => ({
@@ -102,6 +108,8 @@ export const FormGenerator = <Schema extends z.$ZodObject>({
       ...prev,
       errors: [...(prev.errors ?? []), ...mappedIssues],
     }));
+
+    return false;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -129,7 +137,11 @@ export const FormGenerator = <Schema extends z.$ZodObject>({
     }
 
     startTransition(async () => {
-      await onSubmit(data, addErrors);
+      const success = await onSubmit(data, addErrors);
+
+      if (success !== false && resetFormAfterSubmission) {
+        setFormState(initialState);
+      }
     });
   };
 
@@ -151,6 +163,7 @@ export const FormGenerator = <Schema extends z.$ZodObject>({
   return (
     <FormSlot
       {...props}
+      data-zfg-form=''
       onSubmit={handleSubmit}
     >
       {!!formErrors?.length &&
