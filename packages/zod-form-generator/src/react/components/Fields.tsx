@@ -260,8 +260,8 @@ export const PhoneInput: Component<
       <div className='flex items-stretch justify-start'>
         <SelectSlot
           aria-label='Phone country code'
-          autoComplete='tel-country-code'
-          className='min-w-36 shrink-0 rounded-r-none'
+          autoComplete='country'
+          className='min-w-36 shrink-0 border-r-0 rounded-r-none'
           forceErrorStyles={forceErrorStyles || !!errors?.length}
           onChange={(e) => handleChange({ countryCode: e.target.value as CountryCode })}
           showUnselectableDefault={false}
@@ -275,7 +275,7 @@ export const PhoneInput: Component<
         <InputSlot
           {...props}
           autoComplete={props.autoComplete ?? 'tel-national'}
-          className={cn('w-full shrink border-l-0 rounded-l-none', className)}
+          className={cn('w-full shrink rounded-l-none', className)}
           forceErrorStyles={forceErrorStyles || !!errors?.length}
           id={id}
           inputMode='tel'
@@ -366,7 +366,7 @@ export const Select: Component<
               inputType: 'field',
               variant,
             }),
-            'w-full',
+            'w-full focus:ring-2 ring-offset-2 ring-zfg-primary',
             className
           )}
           id={id}
