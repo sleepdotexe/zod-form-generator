@@ -157,7 +157,7 @@ export const PhoneInput: Component<'input', PhoneInputAdditionalProps, 'onChange
   selectSlot: SelectSlot = Select,
   showRequiredAsterisk,
   onChange,
-  allowedCountries,
+  allowedCountries: allowedCountriesInput,
   defaultCountry = 'US',
   commonCountries = [],
   ...props
@@ -181,15 +181,24 @@ export const PhoneInput: Component<'input', PhoneInputAdditionalProps, 'onChange
       const {
         number: e164Number,
         nationalNumber,
-        country,
+        country: parsedCountry,
       } = parsePhoneNumberWithError(number, countryCode);
 
-      if (country && country !== countryCode) {
-        countryCode = country;
+      const parsedNumberIsFromAllowedCountry =
+        parsedCountry && allowedCountries.includes(parsedCountry);
+
+      if (parsedCountry && parsedCountry !== countryCode) {
+        if (parsedNumberIsFromAllowedCountry) {
+          countryCode = parsedCountry;
+        }
         number = nationalNumber;
       }
 
-      onChange?.({ target: { value: e164Number } });
+      const valueToSetUpstream = parsedNumberIsFromAllowedCountry
+        ? e164Number
+        : undefined;
+
+      onChange?.({ target: { value: valueToSetUpstream } });
     } catch {
       onChange?.({ target: { value: number } });
     }
@@ -204,8 +213,11 @@ export const PhoneInput: Component<'input', PhoneInputAdditionalProps, 'onChange
     });
   };
 
-  const countries = getCountries()
-    .filter((c) => !allowedCountries || allowedCountries.includes(c))
+  const allowedCountries = getCountries().filter(
+    (c) => !allowedCountriesInput || allowedCountriesInput.includes(c)
+  );
+
+  const countries = allowedCountries
     .map((c) => ({
       countryCode: c,
       name: new Intl.DisplayNames(['en'], { type: 'region' }).of(c),
@@ -378,7 +390,7 @@ export const Select: Component<
         <span className='inline-block w-4 h-auto absolute top-1/2 right-3 -translate-y-1/2 pointer-events-none select-none'>
           <ChevronIcon
             aria-hidden
-            className='w-full'
+            className='w-full group-has-disabled:hidden'
           />
         </span>
       </div>
