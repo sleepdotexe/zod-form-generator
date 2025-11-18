@@ -16,7 +16,7 @@ import { FieldDescription, FieldError, FieldLabel } from './Structure';
 import type { VariantProps } from 'class-variance-authority';
 import type { CountryCode } from 'libphonenumber-js';
 import type * as z from 'zod/v4/core';
-import type { Component } from '../../core/types';
+import type { Component, FormGeneratorOptions } from '../../core/types';
 
 export type BaseInputProps = {
   unwrap?: boolean;
@@ -133,37 +133,15 @@ export const Input: Component<'input', BaseInputProps, 'onChange'> = ({
   );
 };
 
-const countries = getCountries()
-  .map((c) => ({
-    countryCode: c,
-    name: new Intl.DisplayNames(['en'], { type: 'region' }).of(c),
-    callingCode: getCountryCallingCode(c),
-  }))
-  .sort((a, b) => (a.name && b.name ? a.name.localeCompare(b.name) : 0));
-
-const mapCountriesToOptions = (c: typeof countries) =>
-  c.map(({ countryCode, name, callingCode }) => (
-    <option
-      key={countryCode}
-      suppressHydrationWarning
-      value={countryCode}
-    >
-      {name} (+{callingCode})
-    </option>
-  ));
-
 type PhoneNumber = { countryCode: CountryCode; number: string };
 
-export const PhoneInput: Component<
-  'input',
-  BaseInputProps & {
-    defaultCountry?: CountryCode;
-    commonCountries?: CountryCode[];
+type PhoneInputAdditionalProps = BaseInputProps &
+  FormGeneratorOptions['phoneFields'] & {
     inputSlot?: typeof Input;
     selectSlot?: typeof Select;
-  },
-  'onChange'
-> = ({
+  };
+
+export const PhoneInput: Component<'input', PhoneInputAdditionalProps, 'onChange'> = ({
   id: providedId,
   className,
   children: _,
@@ -179,6 +157,7 @@ export const PhoneInput: Component<
   selectSlot: SelectSlot = Select,
   showRequiredAsterisk,
   onChange,
+  allowedCountries,
   defaultCountry = 'US',
   commonCountries = [],
   ...props
@@ -225,6 +204,26 @@ export const PhoneInput: Component<
     });
   };
 
+  const countries = getCountries()
+    .filter((c) => !allowedCountries || allowedCountries.includes(c))
+    .map((c) => ({
+      countryCode: c,
+      name: new Intl.DisplayNames(['en'], { type: 'region' }).of(c),
+      callingCode: getCountryCallingCode(c),
+    }))
+    .sort((a, b) => (a.name && b.name ? a.name.localeCompare(b.name) : 0));
+
+  const mapCountriesToOptions = (c: typeof countries) =>
+    c.map(({ countryCode, name, callingCode }) => (
+      <option
+        key={countryCode}
+        suppressHydrationWarning
+        value={countryCode}
+      >
+        {name} (+{callingCode})
+      </option>
+    ));
+
   const commonCountriesGroup = commonCountries.length ? (
     <optgroup>
       {mapCountriesToOptions(
@@ -261,7 +260,8 @@ export const PhoneInput: Component<
         <SelectSlot
           aria-label='Phone country code'
           autoComplete='country'
-          className='min-w-36 shrink-0 border-r-0 rounded-r-none'
+          className='min-w-40 shrink-0 border-r-0 rounded-r-none'
+          disabled={props.disabled ?? countries.length === 1}
           forceErrorStyles={forceErrorStyles || !!errors?.length}
           onChange={(e) => handleChange({ countryCode: e.target.value as CountryCode })}
           showUnselectableDefault={false}
@@ -366,7 +366,7 @@ export const Select: Component<
               inputType: 'field',
               variant,
             }),
-            'w-full focus:ring-2 ring-offset-2 ring-zfg-primary',
+            'w-full focus-visible:ring-2 ring-offset-2 ring-zfg-primary',
             className
           )}
           id={id}

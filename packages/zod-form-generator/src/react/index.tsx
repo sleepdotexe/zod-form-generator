@@ -13,27 +13,8 @@ import { generateFields } from './generate-fields';
 import type { CountryCode } from 'libphonenumber-js';
 import type React from 'react';
 import type { ComponentProps } from 'react';
-import type { DeepPartial, ZodForm } from '../core/types';
-import type { CustomFormElements, ShowErrorWhenFunction } from './generate-fields';
-
-export type FormSubmitHandler<Schema extends z.$ZodObject> = (
-  data: z.infer<Schema>,
-  addErrors: (issue: Pick<z.$ZodIssue, 'path' | 'message'>[]) => false
-  // biome-ignore lint/suspicious/noConfusingVoidType: User may implement the handler without returning a value.
-) => Promise<boolean | void>;
-
-export type FormGeneratorOptions = Partial<{
-  formErrorPosition: 'top' | 'above_buttons' | 'bottom';
-  showFieldErrors: 'all' | 'first';
-  showFieldErrorWhen: ShowErrorWhenFunction;
-  showRequiredAsterisk: boolean;
-  preventLeavingWhenDirty: boolean;
-  resetFormAfterSubmission: boolean;
-  phoneFields: Partial<{
-    defaultCountry: CountryCode;
-    commonCountries: CountryCode[];
-  }>;
-}>;
+import type { DeepPartial, FormGeneratorOptions, ZodForm } from '../core/types';
+import type { CustomFormElements } from './generate-fields';
 
 type FormGeneratorButton = {
   label: string;
@@ -45,17 +26,31 @@ type FormGeneratorButtons = {
   [key: string]: FormGeneratorButton;
 };
 
-export type FormGeneratorProps<Schema extends z.$ZodObject> = {
+export type FormSubmitHandler<Schema extends z.$ZodObject> = (
+  data: z.infer<Schema>,
+  addErrors: (issue: Pick<z.$ZodIssue, 'path' | 'message'>[]) => false
+  // biome-ignore lint/suspicious/noConfusingVoidType: User may implement the handler without returning a value.
+) => Promise<boolean | void>;
+
+export type FormGeneratorProps<
+  Schema extends z.$ZodObject,
+  AllowedCountries extends readonly CountryCode[] | undefined = undefined,
+> = {
   schema: Schema;
   onSubmit: FormSubmitHandler<Schema>;
   initialData?: DeepPartial<z.output<Schema>>;
   disabled?: boolean;
   buttons?: FormGeneratorButtons;
   customElements?: CustomFormElements;
-  options?: FormGeneratorOptions;
+  options?: FormGeneratorOptions<AllowedCountries>;
 };
 
-export const FormGenerator = <Schema extends z.$ZodObject>({
+export type { FormGeneratorOptions };
+
+export const FormGenerator = <
+  Schema extends z.$ZodObject,
+  AllowedCountries extends readonly CountryCode[] | undefined = undefined,
+>({
   schema,
   onSubmit,
   initialData: providedData,
@@ -65,7 +60,8 @@ export const FormGenerator = <Schema extends z.$ZodObject>({
   options = {},
   children,
   ...props
-}: Omit<ComponentProps<'form'>, 'onSubmit'> & FormGeneratorProps<Schema>) => {
+}: Omit<ComponentProps<'form'>, 'onSubmit'> &
+  FormGeneratorProps<Schema, AllowedCountries>) => {
   const initialData = mergeDeep(
     generateEmptyObjectFromSchema(schema),
     providedData ?? {}

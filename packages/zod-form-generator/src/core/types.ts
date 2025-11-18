@@ -1,3 +1,4 @@
+import type { CountryCode } from 'libphonenumber-js';
 import type React from 'react';
 import type * as z from 'zod/v4/core';
 
@@ -38,6 +39,42 @@ export type ZodForm<Schema extends z.$ZodObject> = {
   isTouched: boolean;
   touchedFields: Set<string>;
   hasAttemptedSubmit: boolean;
+};
+
+type ShowErrorWhenFunction = (options: {
+  formIsTouched: boolean;
+  formIsDirty: boolean;
+  formHasError: boolean;
+  fieldValue: unknown;
+  fieldIsTouched: boolean;
+  fieldIsDirty: boolean;
+  fieldHasError: boolean;
+  submissionAttempted: boolean;
+}) => boolean;
+
+type PhoneFieldsOptions<T extends readonly CountryCode[] | undefined = undefined> =
+  T extends readonly CountryCode[]
+    ? {
+        allowedCountries: T;
+        defaultCountry: T[number];
+        commonCountries?: T[number][];
+      }
+    : {
+        allowedCountries?: CountryCode[];
+        defaultCountry?: CountryCode;
+        commonCountries?: CountryCode[];
+      };
+
+export type FormGeneratorOptions<
+  AllowedCountries extends readonly CountryCode[] | undefined = undefined,
+> = {
+  formErrorPosition?: 'top' | 'above_buttons' | 'bottom';
+  showFieldErrors?: 'all' | 'first';
+  showFieldErrorWhen?: ShowErrorWhenFunction;
+  showRequiredAsterisk?: boolean;
+  preventLeavingWhenDirty?: boolean;
+  resetFormAfterSubmission?: boolean;
+  phoneFields?: PhoneFieldsOptions<AllowedCountries>;
 };
 
 declare module 'zod/v4/core' {

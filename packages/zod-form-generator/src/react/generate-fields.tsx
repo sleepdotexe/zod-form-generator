@@ -18,7 +18,7 @@ import {
 } from './components/Structure';
 
 import type { ComponentProps, Dispatch, SetStateAction } from 'react';
-import type { ZodForm } from '../core/types';
+import type { FormGeneratorOptions, ZodForm } from '../core/types';
 import type { FormGenerator } from '.';
 import type { Button, ButtonContainer, Form, FormLegend } from './components/Structure';
 
@@ -57,18 +57,7 @@ export const generateFields = <Schema extends z.$ZodObject>(
   });
 };
 
-export type ShowErrorWhenFunction = (options: {
-  formIsTouched: boolean;
-  formIsDirty: boolean;
-  formHasError: boolean;
-  fieldValue: unknown;
-  fieldIsTouched: boolean;
-  fieldIsDirty: boolean;
-  fieldHasError: boolean;
-  submissionAttempted: boolean;
-}) => boolean;
-
-const showErrorWhenDefault: ShowErrorWhenFunction = ({
+const showErrorWhenDefault: FormGeneratorOptions['showFieldErrorWhen'] = ({
   submissionAttempted,
   formIsDirty,
   fieldIsTouched,
@@ -310,13 +299,10 @@ const _generateFields = <Schema extends z.$ZodObject>(
       const { format, inputType, pattern, minLength, maxLength } = input;
 
       if (inputType === 'tel') {
-        const { commonCountries, defaultCountry = 'US' } = phoneFields ?? {};
-
         return (
           <PhoneInput
             {...sharedProps}
-            commonCountries={commonCountries}
-            defaultCountry={defaultCountry}
+            {...(phoneFields as FormGeneratorOptions['phoneFields'])}
             inputSlot={InputSlot}
             key={key}
             selectSlot={SelectSlot}
