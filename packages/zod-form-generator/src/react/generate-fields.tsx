@@ -50,6 +50,10 @@ export const generateFields = <Schema extends z.$ZodObject>(
   const { schema, ...restProps } = props;
   const initalJsonSchema = toJSONSchema(schema);
 
+  if (props.options?.debug) {
+    console.log('Form JSON Schema:', initalJsonSchema);
+  }
+
   return _generateFields<typeof schema>({
     schema,
     jsonSchema: initalJsonSchema,
