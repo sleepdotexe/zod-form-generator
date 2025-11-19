@@ -1,0 +1,14 @@
+@source "../dist/react/";
+
+:root {
+  --zfg-base-text-dark: #fff;
+  --zfg-base-text-description-dark: #a1a1a1;
+  --zfg-base-primary-dark: #fff;
+  --zfg-base-primary-hover-dark: #ddd;
+  --zfg-base-primary-active-dark: #bbb;
+  --zfg-base-primary-contrast-dark: #000;
+  --zfg-base-border-dark: #404040;
+  --zfg-base-disabled-foreground-dark: #f5f5f5;
+  --zfg-base-disabled-background-dark: #262626;
+  --zfg-base-error-dark: #ff6568;
+}

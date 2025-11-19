@@ -288,7 +288,6 @@ const _generateFields = <Schema extends z.$ZodObject>(
           >
             {input.enum.map((enumValue) => (
               <option
-                className='text-black bg-white dark:text-white dark:bg-black'
                 key={String(enumValue)}
                 value={String(enumValue)}
               >
@@ -379,6 +378,7 @@ const _generateFields = <Schema extends z.$ZodObject>(
       return (
         <CheckboxSlot
           {...sharedProps}
+          aria-required={false}
           autoComplete={undefined}
           checked={Boolean(valueFromState)}
           inputMode={undefined}

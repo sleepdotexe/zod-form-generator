@@ -10,7 +10,7 @@ export const Form: Component<'form'> = ({ className, children, ...props }) => {
   return (
     <form
       className={cn(
-        'flex flex-col justify-start items-stretch gap-9 max-w-md w-full text-zfg-text',
+        'flex flex-col justify-start items-stretch gap-9 max-w-md w-full text-zfg-text dark:text-zfg-text-dark',
         className
       )}
       {...props}
@@ -24,7 +24,7 @@ export const FormError: Component<'p'> = ({ className, children, ...props }) => 
   return (
     <p
       className={cn(
-        'flex gap-3 text-red-600 bg-red-100/50 dark:bg-red-950/50 dark:text-red-400 border border-red-300 dark:border-red-900 px-4 py-3 rounded-md text-xs font-medium motion-safe:animate-zfg-fade-in',
+        'flex gap-3 text-zfg-error dark:text-zfg-error-dark bg-zfg-error/5 dark:bg-zfg-error-dark/5 border border-zfg-error/40 dark:border-zfg-error-dark/40 px-4 py-3 rounded-md text-xs font-medium motion-safe:animate-zfg-fade-in',
         className
       )}
       {...props}
@@ -76,7 +76,7 @@ export const FieldLabel: Component<'label', { showRequiredAsterisk?: boolean }> 
     // biome-ignore lint/a11y/noLabelWithoutControl: generic component
     <label
       className={cn(
-        'font-semibold text-sm m-0 group-has-required:after:ml-0.5 group-has-required:after:text-red-600 dark:group-has-required:after:text-red-400 cursor-pointer group-has-disabled:cursor-auto',
+        'font-semibold text-sm m-0 group-has-required:after:ml-0.5 group-has-required:after:text-zfg-error dark:group-has-required:after:text-zfg-error-dark cursor-pointer group-has-disabled:cursor-auto',
         showRequiredAsterisk &&
           "group-has-required:after:content-['*'/''] after:[speak:none]",
         className
@@ -92,7 +92,7 @@ export const FieldDescription: Component<'p'> = ({ className, children, ...props
   return (
     <p
       className={cn(
-        'font-normal text-xs m-0 mb-1 text-neutral-600 dark:text-neutral-400',
+        'font-normal text-xs m-0 mb-1 text-zfg-text-description dark:text-zfg-text-description-dark',
         className
       )}
       {...props}
@@ -106,7 +106,7 @@ export const FieldError: Component<'p'> = ({ className, children, ...props }) =>
   return (
     <p
       className={cn(
-        'flex gap-2 text-red-600 dark:text-red-500 text-xs font-medium motion-safe:animate-zfg-fade-in',
+        'flex gap-2 text-zfg-error dark:text-zfg-error-dark text-xs font-medium motion-safe:animate-zfg-fade-in',
         className
       )}
       {...props}
@@ -129,12 +129,12 @@ export const ButtonContainer: Component<'div'> = ({ className, children, ...prop
 };
 
 const buttonStlyes = cva(
-  'flex justify-center items-center gap-[0.8em] px-[2em] py-[0.75em] whitespace-nowrap rounded-md max-w-full text-sm text-center text-zfg-primary font-semibold cursor-pointer disabled:cursor-not-allowed disabled:opacity-50 border-2 border-transparent transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-zfg-primary focus-visible:ring-offset-2',
+  'flex justify-center items-center gap-[0.8em] px-[2em] py-[0.75em] whitespace-nowrap rounded-md max-w-full text-sm text-center text-zfg-primary dark:text-zfg-primary-dark font-semibold cursor-pointer disabled:cursor-not-allowed disabled:opacity-50 border-2 border-transparent transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-zfg-primary dark:focus-visible:ring-zfg-primary-dark focus-visible:ring-offset-2',
   {
     variants: {
       variant: {
         filled:
-          'bg-zfg-primary not-disabled:hover:bg-zfg-primary-hover not-disabled:focus-visible:bg-zfg-primary-hover not-disabled:active:bg-zfg-primary-active text-zfg-primary-contrast',
+          'bg-zfg-primary dark:bg-zfg-primary-dark not-disabled:hover:bg-zfg-primary-hover dark:not-disabled:hover:bg-zfg-primary-hover-dark not-disabled:focus-visible:bg-zfg-primary-hover dark:not-disabled:focus-visible:bg-zfg-primary-hover-dark not-disabled:active:bg-zfg-primary-active dark:not-disabled:active:bg-zfg-primary-active-dark text-zfg-primary-contrast dark:text-zfg-primary-contrast-dark',
         outline: 'border-current',
       },
     },

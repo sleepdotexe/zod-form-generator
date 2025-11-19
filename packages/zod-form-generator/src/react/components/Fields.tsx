@@ -43,18 +43,18 @@ const InputWrapper: Component<'div', { unwrap?: boolean }> = ({
 };
 
 const inputStyles = cva(
-  'rounded-md border border-neutral-300 dark:border-neutral-700 duration-200 focus:outline-none appearance-none transition-all',
+  'rounded-md border border-zfg-border dark:border-zfg-border-dark duration-200 focus:outline-none appearance-none transition-all',
   {
     variants: {
       variant: {
         default: '',
-        error: 'border-red-400 dark:border-red-700',
+        error: 'border-zfg-error/70 dark:border-zfg-error-dark/70',
       },
       inputType: {
         field:
-          'px-4 py-2.5 text-sm disabled:bg-neutral-100 disabled:dark:bg-neutral-800 disabled:cursor-not-allowed',
+          'px-4 py-2.5 text-sm disabled:bg-zfg-disabled-background disabled:text-zfg-disabled-foreground dark:disabled:bg-zfg-disabled-background-dark dark:disabled:text-zfg-disabled-foreground-dark disabled:cursor-not-allowed',
         checkbox:
-          'relative w-5 h-5 flex items-center justify-center shrink-0 has-disabled:bg-neutral-100 has-disabled:dark:bg-neutral-800 has-disabled:cursor-not-allowed',
+          'relative w-5 h-5 flex items-center justify-center shrink-0 has-disabled:opacity-50 has-disabled:cursor-not-allowed',
       },
     },
     defaultVariants: {
@@ -378,7 +378,7 @@ export const Select: Component<
               inputType: 'field',
               variant,
             }),
-            'w-full focus-visible:ring-2 ring-offset-2 ring-zfg-primary',
+            'w-full focus-visible:ring-2 ring-offset-2 ring-zfg-primary dark:ring-zfg-primary-dark',
             className
           )}
           id={id}
@@ -443,15 +443,16 @@ export const Checkbox: Component<'input', BaseInputProps, 'onChange'> = ({
               inputType: 'checkbox',
               variant,
             }),
-            'has-focus-visible:ring-2 ring-offset-2 ring-zfg-primary',
-            checked && 'bg-zfg-primary border-zfg-primary dark:border-zfg-primary',
+            'has-focus-visible:ring-2 ring-offset-2 ring-zfg-primary dark:ring-zfg-primary-dark',
+            checked &&
+              'bg-zfg-primary dark:bg-zfg-primary-dark border-zfg-primary dark:border-zfg-primary-dark',
             className
           )}
         >
           <CheckIcon
             aria-hidden
             className={cn(
-              'absolute w-3 h-auto top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-zfg-primary-contrast opacity-0 transition-opacity duration-200',
+              'absolute w-3 h-auto top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-zfg-primary-contrast dark:text-zfg-primary-contrast-dark opacity-0 transition-opacity duration-200',
               checked && 'opacity-100'
             )}
           />
@@ -464,7 +465,9 @@ export const Checkbox: Component<'input', BaseInputProps, 'onChange'> = ({
         </div>
 
         {(label || description) && (
-          <div className='flex flex-col gap-1 mt-px'>
+          <div
+            className={cn('flex flex-col gap-1 mt-px', props.disabled && 'opacity-50')}
+          >
             {label && (
               <LabelSlot
                 htmlFor={id}

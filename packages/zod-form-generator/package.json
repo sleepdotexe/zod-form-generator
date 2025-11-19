@@ -17,6 +17,9 @@
     },
     "./tailwind": {
       "style": "./styles/tailwind.css"
+    },
+    "./tailwind-dark": {
+      "style": "./styles/tailwind-dark.css"
     }
   },
   "files": ["dist", "styles", "README.md"],
