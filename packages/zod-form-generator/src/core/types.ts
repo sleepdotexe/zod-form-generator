@@ -1,6 +1,8 @@
+import type { VariantProps } from 'class-variance-authority';
 import type { CountryCode } from 'libphonenumber-js';
 import type React from 'react';
 import type * as z from 'zod/v4/core';
+import type { Button } from '../react/components';
 
 declare module 'react' {
   // biome-ignore lint/correctness/noUnusedVariables: Extending existing interface
@@ -68,13 +70,16 @@ type PhoneFieldsOptions<T extends readonly CountryCode[] | undefined = undefined
 export type FormGeneratorOptions<
   AllowedCountries extends readonly CountryCode[] | undefined = undefined,
 > = Partial<{
+  debug: boolean;
   formErrorPosition: 'top' | 'above_buttons' | 'bottom';
   showFieldErrors: 'all' | 'first';
   showFieldErrorWhen: ShowErrorWhenFunction;
   showRequiredAsterisk: boolean;
   preventLeavingWhenDirty: boolean;
   resetFormAfterSubmission: boolean;
-  debug: boolean;
+  buttons: Partial<{
+    size: VariantProps<typeof Button>['size'];
+  }>;
   phoneFields: PhoneFieldsOptions<AllowedCountries>;
 }>;
 

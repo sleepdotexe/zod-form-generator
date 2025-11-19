@@ -137,9 +137,14 @@ const buttonStlyes = cva(
           'bg-zfg-primary dark:bg-zfg-primary-dark not-disabled:hover:bg-zfg-primary-hover dark:not-disabled:hover:bg-zfg-primary-hover-dark not-disabled:focus-visible:bg-zfg-primary-hover dark:not-disabled:focus-visible:bg-zfg-primary-hover-dark not-disabled:active:bg-zfg-primary-active dark:not-disabled:active:bg-zfg-primary-active-dark text-zfg-primary-contrast dark:text-zfg-primary-contrast-dark',
         outline: 'border-current',
       },
+      size: {
+        full: '',
+        content: 'self-start',
+      },
     },
     defaultVariants: {
       variant: 'filled',
+      size: 'full',
     },
   }
 );
@@ -148,12 +153,13 @@ export const Button: Component<'button', VariantProps<typeof buttonStlyes>> = ({
   className,
   children,
   type = 'button',
-  variant = 'filled',
+  variant,
+  size,
   ...props
 }) => {
   return (
     <button
-      className={cn(buttonStlyes({ variant }), className)}
+      className={cn(buttonStlyes({ variant, size }), className)}
       type={type}
       {...props}
     >

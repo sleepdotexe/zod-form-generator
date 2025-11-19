@@ -91,6 +91,7 @@ export const FormGenerator = <
     formErrorPosition = 'above_buttons',
     preventLeavingWhenDirty = false,
     resetFormAfterSubmission = false,
+    buttons: buttonsOptions,
   } = options;
 
   const addErrors: Parameters<FormSubmitHandler<Schema>>[1] = (issues) => {
@@ -196,6 +197,7 @@ export const FormGenerator = <
               !!formState.errors?.filter((issue) => issue.path.length > 0).length)
           }
           isLoading={isLoading}
+          options={buttonsOptions}
           setFormState={setFormState}
         />
       </ButtonContainerSlot>
@@ -209,6 +211,7 @@ type ButtonsProps<Schema extends z.$ZodObject> = {
   disabled?: boolean;
   isLoading?: boolean;
   setFormState: React.Dispatch<React.SetStateAction<ZodForm<Schema>>>;
+  options?: FormGeneratorOptions['buttons'];
 };
 
 const Buttons = <Schema extends z.$ZodObject>({
@@ -221,6 +224,7 @@ const Buttons = <Schema extends z.$ZodObject>({
   disabled,
   isLoading,
   setFormState,
+  options,
 }: ButtonsProps<Schema>) => {
   const {
     submit: { label: submitLabel, props: submitProps },
@@ -239,6 +243,7 @@ const Buttons = <Schema extends z.$ZodObject>({
             hasAttemptedSubmit: true,
           }));
         }}
+        size={options?.size}
         type='submit'
       >
         {isLoading ? 'Submitting...' : submitLabel}
@@ -248,6 +253,7 @@ const Buttons = <Schema extends z.$ZodObject>({
         <ButtonSlot
           {...buttonProps}
           key={key}
+          size={options?.size}
           type='button'
           variant={buttonProps?.variant ?? 'outline'}
         >
