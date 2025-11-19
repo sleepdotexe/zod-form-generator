@@ -378,7 +378,7 @@ export const Select: Component<
               inputType: 'field',
               variant,
             }),
-            'w-full focus-visible:ring-2 ring-offset-2 ring-zfg-primary dark:ring-zfg-primary-dark text-ellipsis overflow-hidden whitespace-nowrap pr-7',
+            'w-full h-full focus-visible:ring-2 ring-offset-2 ring-zfg-primary dark:ring-zfg-primary-dark text-ellipsis overflow-hidden whitespace-nowrap pr-7',
             className
           )}
           id={id}
@@ -390,7 +390,7 @@ export const Select: Component<
         <span className='inline-block w-4 h-auto absolute top-1/2 right-3 -translate-y-1/2 pointer-events-none select-none'>
           <ChevronIcon
             aria-hidden
-            className='w-full group-has-disabled:hidden'
+            className='w-full group-has-[select:disabled]:text-zfg-disabled-foreground dark:group-has-[select:disabled]:text-zfg-disabled-foreground-dark'
           />
         </span>
       </div>

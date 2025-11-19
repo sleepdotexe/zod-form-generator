@@ -92,7 +92,7 @@ export const FieldDescription: Component<'p'> = ({ className, children, ...props
   return (
     <p
       className={cn(
-        'font-normal text-xs m-0 mb-1 text-zfg-text-description dark:text-zfg-text-description-dark',
+        'font-normal text-xs max-w-[45ch] m-0 mb-1 text-zfg-text-description dark:text-zfg-text-description-dark',
         className
       )}
       {...props}
