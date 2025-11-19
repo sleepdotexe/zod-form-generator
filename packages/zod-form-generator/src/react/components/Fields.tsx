@@ -378,7 +378,7 @@ export const Select: Component<
               inputType: 'field',
               variant,
             }),
-            'w-full focus-visible:ring-2 ring-offset-2 ring-zfg-primary dark:ring-zfg-primary-dark',
+            'w-full focus-visible:ring-2 ring-offset-2 ring-zfg-primary dark:ring-zfg-primary-dark text-ellipsis overflow-hidden whitespace-nowrap pr-7',
             className
           )}
           id={id}
