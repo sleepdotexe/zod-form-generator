@@ -14,7 +14,7 @@ export type Icon = Component<
   | 'strokeWidth'
 >;
 
-export const ErrorIcon: Icon = ({ title, ...props }) => {
+export const ErrorIcon: Icon = ({ title = 'error icon', ...props }) => {
   return (
     <svg
       {...props}
@@ -24,7 +24,7 @@ export const ErrorIcon: Icon = ({ title, ...props }) => {
       width='24'
       xmlns='http://www.w3.org/2000/svg'
     >
-      <title>{title ?? 'error icon'}</title>
+      <title>{title}</title>
       <path
         d='M0 0h24v24H0z'
         fill='none'
@@ -35,7 +35,7 @@ export const ErrorIcon: Icon = ({ title, ...props }) => {
   );
 };
 
-export const CheckIcon: Icon = ({ title, ...props }) => {
+export const CheckIcon: Icon = ({ title = 'check icon', ...props }) => {
   return (
     <svg
       {...props}
@@ -49,7 +49,7 @@ export const CheckIcon: Icon = ({ title, ...props }) => {
       width='24'
       xmlns='http://www.w3.org/2000/svg'
     >
-      <title>{title ?? 'check icon'}</title>
+      <title>{title}</title>
       <path
         d='M0 0h24v24H0z'
         fill='none'
@@ -60,7 +60,7 @@ export const CheckIcon: Icon = ({ title, ...props }) => {
   );
 };
 
-export const ChevronIcon: Icon = ({ title, ...props }) => {
+export const ChevronIcon: Icon = ({ title = 'chevron icon', ...props }) => {
   return (
     <svg
       {...props}
@@ -74,7 +74,7 @@ export const ChevronIcon: Icon = ({ title, ...props }) => {
       width='24'
       xmlns='http://www.w3.org/2000/svg'
     >
-      <title>{title ?? 'chevron icon'}</title>
+      <title>{title}</title>
       <path
         d='M0 0h24v24H0z'
         fill='none'

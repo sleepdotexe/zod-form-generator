@@ -138,12 +138,18 @@ const _generateFields = <Schema extends z.$ZodObject>(
 
       const Wrapper = unwrap ? Fragment : FieldsetSlot;
 
+      const fieldsetProps = unwrap
+        ? {}
+        : {
+            legend: title,
+            description,
+            disabled: formDisabled || readOnly,
+          };
+
       return (
         <Wrapper
-          description={unwrap ? undefined : description}
-          disabled={unwrap ? undefined : formDisabled || readOnly}
+          {...fieldsetProps}
           key={key}
-          legend={unwrap ? undefined : title}
         >
           {!!fieldsetErrors?.length &&
             fieldsetErrors.map((issue) => (

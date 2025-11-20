@@ -15,11 +15,13 @@ import { FieldDescription, FieldError, FieldLabel } from './Structure';
 
 import type { VariantProps } from 'class-variance-authority';
 import type { CountryCode } from 'libphonenumber-js';
+import type { ReactNode } from 'react';
 import type * as z from 'zod/v4/core';
 import type { Component, FormGeneratorOptions } from '../../core/types';
 
 export type BaseInputProps = {
   unwrap?: boolean;
+  icon?: ReactNode;
   label?: string;
   labelSlot?: typeof FieldLabel;
   description?: string;
@@ -52,9 +54,12 @@ const inputStyles = cva(
       },
       inputType: {
         field:
-          'px-4 py-2.5 text-sm disabled:bg-zfg-disabled-background disabled:text-zfg-disabled-foreground dark:disabled:bg-zfg-disabled-background-dark dark:disabled:text-zfg-disabled-foreground-dark disabled:cursor-not-allowed',
+          'w-full h-full px-4 py-2.5 text-sm disabled:bg-zfg-disabled-background disabled:text-zfg-disabled-foreground dark:disabled:bg-zfg-disabled-background-dark dark:disabled:text-zfg-disabled-foreground-dark disabled:cursor-not-allowed',
         checkbox:
           'relative w-5 h-5 flex items-center justify-center shrink-0 has-disabled:opacity-50 has-disabled:cursor-not-allowed',
+      },
+      icon: {
+        withIcon: 'pr-7',
       },
     },
     defaultVariants: {
@@ -69,6 +74,7 @@ export const Input: Component<'input', BaseInputProps, 'onChange'> = ({
   className,
   children,
   unwrap,
+  icon,
   label,
   labelSlot: LabelSlot = FieldLabel,
   description,
@@ -102,18 +108,27 @@ export const Input: Component<'input', BaseInputProps, 'onChange'> = ({
         </div>
       )}
 
-      <input
-        aria-describedby={errors?.length ? errorsId : undefined}
-        className={cn(
-          inputStyles({
+      <div
+        className={cn('relative', className)}
+        data-zfg-input=''
+      >
+        <input
+          aria-describedby={errors?.length ? errorsId : undefined}
+          className={inputStyles({
             inputType: 'field',
             variant,
-          }),
-          className
+            icon: icon ? 'withIcon' : undefined,
+          })}
+          id={id}
+          {...props}
+        />
+
+        {icon && (
+          <span className='inline-block absolute top-1/2 right-3 -translate-y-1/2 pointer-events-none select-none'>
+            {icon}
+          </span>
         )}
-        id={id}
-        {...props}
-      />
+      </div>
 
       {children}
 
@@ -268,11 +283,14 @@ export const PhoneInput: Component<'input', PhoneInputAdditionalProps, 'onChange
         </div>
       )}
 
-      <div className='flex items-stretch justify-start'>
+      <div
+        className={cn('flex items-stretch justify-start', className)}
+        data-zfg-phone-input=''
+      >
         <SelectSlot
           aria-label='Phone country code'
           autoComplete='country'
-          className='min-w-40 shrink-0 border-r-0 rounded-r-none'
+          className='w-44 shrink-0 [&>select]:border-r-0 [&>select]:rounded-r-none'
           disabled={props.disabled ?? countries.length === 1}
           forceErrorStyles={forceErrorStyles || !!errors?.length}
           onChange={(e) => handleChange({ countryCode: e.target.value as CountryCode })}
@@ -287,7 +305,7 @@ export const PhoneInput: Component<'input', PhoneInputAdditionalProps, 'onChange
         <InputSlot
           {...props}
           autoComplete={props.autoComplete ?? 'tel-national'}
-          className={cn('w-full shrink rounded-l-none', className)}
+          className={'w-full shrink [&>input]:rounded-l-none'}
           forceErrorStyles={forceErrorStyles || !!errors?.length}
           id={id}
           inputMode='tel'
@@ -326,6 +344,7 @@ export const Select: Component<
   className,
   children,
   unwrap,
+  icon,
   label,
   labelSlot: LabelSlot = FieldLabel,
   description,
@@ -371,15 +390,18 @@ export const Select: Component<
         </div>
       )}
 
-      <div className='relative'>
+      <div
+        className={cn('relative', className)}
+        data-zfg-select=''
+      >
         <select
           className={cn(
             inputStyles({
               inputType: 'field',
               variant,
+              icon: 'withIcon',
             }),
-            'w-full h-full focus-visible:ring-2 ring-offset-2 ring-zfg-primary dark:ring-zfg-primary-dark text-ellipsis overflow-hidden whitespace-nowrap pr-7',
-            className
+            'focus-visible:ring-2 ring-offset-2 ring-zfg-primary dark:ring-zfg-primary-dark text-ellipsis overflow-hidden whitespace-nowrap'
           )}
           id={id}
           {...props}
@@ -387,11 +409,14 @@ export const Select: Component<
           {defaultValue}
           {children}
         </select>
-        <span className='inline-block w-4 h-auto absolute top-1/2 right-3 -translate-y-1/2 pointer-events-none select-none'>
-          <ChevronIcon
-            aria-hidden
-            className='w-full group-has-[select:disabled]:text-zfg-disabled-foreground dark:group-has-[select:disabled]:text-zfg-disabled-foreground-dark'
-          />
+
+        <span className='inline-block absolute top-1/2 right-3 -translate-y-1/2 pointer-events-none select-none'>
+          {icon ?? (
+            <ChevronIcon
+              aria-hidden
+              className='w-4 h-auto group-has-[select:disabled]:text-zfg-disabled-foreground dark:group-has-[select:disabled]:text-zfg-disabled-foreground-dark'
+            />
+          )}
         </span>
       </div>
 
@@ -416,6 +441,7 @@ export const Checkbox: Component<'input', BaseInputProps, 'onChange'> = ({
   className,
   children,
   unwrap,
+  icon: _,
   label,
   labelSlot: LabelSlot = FieldLabel,
   description,
@@ -442,12 +468,14 @@ export const Checkbox: Component<'input', BaseInputProps, 'onChange'> = ({
             inputStyles({
               inputType: 'checkbox',
               variant,
+              icon: undefined,
             }),
             'has-focus-visible:ring-2 ring-offset-2 ring-zfg-primary dark:ring-zfg-primary-dark',
             checked &&
               'bg-zfg-primary dark:bg-zfg-primary-dark border-zfg-primary dark:border-zfg-primary-dark',
             className
           )}
+          data-zfg-checkbox=''
         >
           <CheckIcon
             aria-hidden
