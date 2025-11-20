@@ -206,7 +206,7 @@ const _generateFields = <Schema extends z.$ZodObject>(
       fieldIsTouched,
       fieldIsDirty,
       fieldHasError: !!thisFieldErrors?.length,
-      submissionAttempted: formState.hasAttemptedSubmit,
+      submissionAttempted: !!formState.lastSubmissionAttemptTimestamp,
     });
 
     const thisFieldFlattenedErrors = thisFieldErrors?.flatMap((issue) =>
@@ -247,7 +247,7 @@ const _generateFields = <Schema extends z.$ZodObject>(
       onChange: (e) => setValueInState(e.target.value),
       onBlur: () =>
         setFormState((prev) => {
-          if (prev.hasAttemptedSubmit) {
+          if (prev.lastSubmissionAttemptTimestamp !== null) {
             return prev;
           }
 

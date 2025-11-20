@@ -40,7 +40,7 @@ export type ZodForm<Schema extends z.$ZodObject> = {
   dirtyFields: Set<string>;
   isTouched: boolean;
   touchedFields: Set<string>;
-  hasAttemptedSubmit: boolean;
+  lastSubmissionAttemptTimestamp: number | null;
 };
 
 type ShowErrorWhenFunction = (options: {

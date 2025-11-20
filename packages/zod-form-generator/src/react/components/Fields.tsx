@@ -9,6 +9,7 @@ import {
 } from 'libphonenumber-js';
 import { Fragment, useId, useState } from 'react';
 
+import { FORM_DATA_ATTRIBUTE_NAMES } from '../../core/constants';
 import { cn } from '../../core/util';
 import { CheckIcon, ChevronIcon } from './Icons';
 import { FieldDescription, FieldError, FieldLabel } from './Structure';
@@ -109,8 +110,8 @@ export const Input: Component<'input', BaseInputProps, 'onChange'> = ({
       )}
 
       <div
+        {...{ [FORM_DATA_ATTRIBUTE_NAMES.INPUT]: '' }}
         className={cn('relative', className)}
-        data-zfg-input=''
       >
         <input
           aria-describedby={errors?.length ? errorsId : undefined}
@@ -285,7 +286,7 @@ export const PhoneInput: Component<'input', PhoneInputAdditionalProps, 'onChange
 
       <div
         className={cn('flex items-stretch justify-start', className)}
-        data-zfg-phone-input=''
+        {...{ [FORM_DATA_ATTRIBUTE_NAMES.INPUT_PHONE]: '' }}
       >
         <SelectSlot
           aria-label='Phone country code'
@@ -392,7 +393,7 @@ export const Select: Component<
 
       <div
         className={cn('relative', className)}
-        data-zfg-select=''
+        {...{ [FORM_DATA_ATTRIBUTE_NAMES.SELECT]: '' }}
       >
         <select
           className={cn(
@@ -475,7 +476,7 @@ export const Checkbox: Component<'input', BaseInputProps, 'onChange'> = ({
               'bg-zfg-primary dark:bg-zfg-primary-dark border-zfg-primary dark:border-zfg-primary-dark',
             className
           )}
-          data-zfg-checkbox=''
+          {...{ [FORM_DATA_ATTRIBUTE_NAMES.CHECKBOX]: '' }}
         >
           <CheckIcon
             aria-hidden

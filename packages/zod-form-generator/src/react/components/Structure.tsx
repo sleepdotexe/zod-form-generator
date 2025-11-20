@@ -1,5 +1,6 @@
 import { cva } from 'class-variance-authority';
 
+import { FORM_DATA_ATTRIBUTE_NAMES } from '../../core/constants';
 import { cn } from '../../core/util';
 import { ErrorIcon } from './Icons';
 
@@ -13,7 +14,7 @@ export const Form: Component<'form'> = ({ className, children, ...props }) => {
         'flex flex-col justify-start items-stretch gap-9 max-w-md w-full text-zfg-text dark:text-zfg-text-dark',
         className
       )}
-      data-zfg-form=''
+      {...{ [FORM_DATA_ATTRIBUTE_NAMES.FORM]: '' }}
       {...props}
     >
       {children}
@@ -28,7 +29,7 @@ export const FormError: Component<'p'> = ({ className, children, ...props }) => 
         'flex gap-3 text-zfg-error dark:text-zfg-error-dark bg-zfg-error/5 dark:bg-zfg-error-dark/5 border border-zfg-error/40 dark:border-zfg-error-dark/40 px-4 py-3 rounded-md text-xs font-medium motion-safe:animate-zfg-fade-in',
         className
       )}
-      data-zfg-form-error=''
+      {...{ [FORM_DATA_ATTRIBUTE_NAMES.FORM_ERROR]: '' }}
       {...props}
     >
       <ErrorIcon className='w-[1.5em] -mt-px h-auto' />
@@ -44,7 +45,7 @@ export const Fieldset: Component<
   return (
     <fieldset
       className={cn('flex flex-col gap-4', className)}
-      data-zfg-fieldset=''
+      {...{ [FORM_DATA_ATTRIBUTE_NAMES.FIELDSET]: '' }}
       {...props}
     >
       {(legend || description) && (
@@ -62,7 +63,7 @@ export const FormLegend: Component<'legend'> = ({ className, children, ...props 
   return (
     <legend
       className={cn('inline-block text-lg font-bold m-0 mb-1', className)}
-      data-zfg-legend=''
+      {...{ [FORM_DATA_ATTRIBUTE_NAMES.LEGEND]: '' }}
       {...props}
     >
       {children}
@@ -85,7 +86,7 @@ export const FieldLabel: Component<'label', { showRequiredAsterisk?: boolean }> 
           "group-has-required:after:content-['*'/''] after:[speak:none]",
         className
       )}
-      data-zfg-label=''
+      {...{ [FORM_DATA_ATTRIBUTE_NAMES.LABEL]: '' }}
       {...props}
     >
       {children}
@@ -100,7 +101,7 @@ export const FieldDescription: Component<'p'> = ({ className, children, ...props
         'font-normal text-xs max-w-[45ch] m-0 mb-1 text-zfg-text-description dark:text-zfg-text-description-dark',
         className
       )}
-      data-zfg-field-description=''
+      {...{ [FORM_DATA_ATTRIBUTE_NAMES.FIELD_DESCRIPTION]: '' }}
       {...props}
     >
       {children}
@@ -115,7 +116,7 @@ export const FieldError: Component<'p'> = ({ className, children, ...props }) =>
         'flex gap-2 text-zfg-error dark:text-zfg-error-dark text-xs font-medium motion-safe:animate-zfg-fade-in',
         className
       )}
-      data-zfg-field-error=''
+      {...{ [FORM_DATA_ATTRIBUTE_NAMES.FIELD_ERROR]: '' }}
       {...props}
     >
       <ErrorIcon className='w-[1.5em] -mt-px h-auto' />
@@ -128,7 +129,7 @@ export const ButtonContainer: Component<'div'> = ({ className, children, ...prop
   return (
     <div
       className={cn('flex flex-col items-stretch gap-2', className)}
-      data-zfg-button-container=''
+      {...{ [FORM_DATA_ATTRIBUTE_NAMES.BUTTON_CONTAINER]: '' }}
       {...props}
     >
       {children}
@@ -168,7 +169,7 @@ export const Button: Component<'button', VariantProps<typeof buttonStlyes>> = ({
   return (
     <button
       className={cn(buttonStlyes({ variant, size }), className)}
-      data-zfg-button=''
+      {...{ [FORM_DATA_ATTRIBUTE_NAMES.BUTTON]: '' }}
       type={type}
       {...props}
     >

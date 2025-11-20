@@ -5,6 +5,7 @@ export * from '../core/customs';
 import { useEffect, useState, useTransition } from 'react';
 import * as z from 'zod/v4/core';
 
+import { FORM_DATA_ATTRIBUTE_NAMES } from '../core/constants';
 import { cn, mergeDeep } from '../core/util';
 import { generateEmptyObjectFromSchema } from '../core/zod-helpers';
 import { Button, ButtonContainer, Form, FormError } from './components/Structure';
@@ -45,7 +46,31 @@ export type FormGeneratorProps<
   options?: FormGeneratorOptions<AllowedCountries>;
 };
 
-export type { FormGeneratorOptions };
+const scrollToFirstError = () => {
+  const firstFieldError = document.querySelector(
+    `[${FORM_DATA_ATTRIBUTE_NAMES.FIELD_ERROR}]`
+  );
+  const firstFormError = document.querySelector(
+    `[${FORM_DATA_ATTRIBUTE_NAMES.FORM_ERROR}]`
+  );
+
+  const toScrollTo = firstFieldError ?? firstFormError;
+  if (!toScrollTo) {
+    return;
+  }
+
+  toScrollTo.scrollIntoView({ block: 'center' });
+
+  if (firstFieldError) {
+    const nearestInput = firstFieldError
+      .closest('div:has([data-error])')
+      ?.querySelector('[data-error]');
+    console.log(nearestInput);
+    if (nearestInput) {
+      (nearestInput as HTMLElement).focus();
+    }
+  }
+};
 
 export const FormGenerator = <
   Schema extends z.$ZodObject,
@@ -74,7 +99,7 @@ export const FormGenerator = <
     isTouched: false,
     dirtyFields: new Set(),
     touchedFields: new Set(),
-    hasAttemptedSubmit: false,
+    lastSubmissionAttemptTimestamp: null,
   };
 
   const [isLoading, startTransition] = useTransition();
@@ -118,7 +143,7 @@ export const FormGenerator = <
 
     setFormState((prev) => ({
       ...prev,
-      hasAttemptedSubmit: true,
+      lastSubmissionAttemptTimestamp: Date.now(),
       errors: null,
     }));
 
@@ -135,6 +160,11 @@ export const FormGenerator = <
 
     startTransition(async () => {
       const success = await onSubmit(data, addErrors);
+
+      setFormState((prev) => ({
+        ...prev,
+        lastSubmissionAttemptTimestamp: Date.now(),
+      }));
 
       if (success !== false && resetFormAfterSubmission) {
         setFormState(initialState);
@@ -155,12 +185,18 @@ export const FormGenerator = <
     return () => window.removeEventListener('beforeunload', handleBeforeUnload);
   }, [preventLeavingWhenDirty, formState.isDirty]);
 
+  useEffect(() => {
+    if (formState.lastSubmissionAttemptTimestamp !== null) {
+      scrollToFirstError();
+    }
+  }, [formState.lastSubmissionAttemptTimestamp]);
+
   const formErrors = formState.errors?.filter((issue) => issue.path.length === 0);
 
   return (
     <FormSlot
       {...props}
-      data-zfg-form=''
+      {...{ [FORM_DATA_ATTRIBUTE_NAMES.FORM]: '' }}
       onSubmit={handleSubmit}
     >
       {!!formErrors?.length &&
@@ -193,7 +229,7 @@ export const FormGenerator = <
           buttons={buttons}
           disabled={
             disabled ||
-            (formState.hasAttemptedSubmit &&
+            (formState.lastSubmissionAttemptTimestamp !== null &&
               !!formState.errors?.filter((issue) => issue.path.length > 0).length)
           }
           isLoading={isLoading}
@@ -240,7 +276,7 @@ const Buttons = <Schema extends z.$ZodObject>({
           submitProps?.onClick?.(e);
           setFormState((prev) => ({
             ...prev,
-            hasAttemptedSubmit: true,
+            lastSubmissionAttemptTimestamp: Date.now(),
           }));
         }}
         size={options?.size}
@@ -263,3 +299,6 @@ const Buttons = <Schema extends z.$ZodObject>({
     </>
   );
 };
+
+export { FORM_DATA_ATTRIBUTE_NAMES };
+export type { FormGeneratorOptions };
