@@ -8,7 +8,7 @@ import {
   setNestedValueByPath,
 } from '../core/util';
 import { determineFieldStartingValue, toJSONSchema } from '../core/zod-helpers';
-import { Checkbox, Input, PhoneInput, Select } from './components/Fields';
+import { Checkbox, Input, PhoneInput, RadioButtons, Select } from './components/Fields';
 import {
   FieldDescription,
   FieldError,
@@ -270,38 +270,31 @@ const _generateFields = <Schema extends z.$ZodObject>(
         const { enumLabels, inputType } = input;
 
         if (inputType === 'radio') {
-          return null;
-
-          // return (
-          //   <RadioButtons
-          //     {...(sharedProps as Partial<ComponentProps<typeof Input>>)}
-          //     key={key}
-          //     options={input.enum.map((enumValue) => ({
-          //       value: String(enumValue),
-          //       label:
-          //         (enumLabels as z.GlobalMeta["enumLabels"])?.[
-          //           String(enumValue)
-          //         ] ?? String(enumValue),
-          //     }))}
-          //   />
-          // );
+          return (
+            <RadioButtons
+              {...(sharedProps as Partial<ComponentProps<typeof Input>>)}
+              key={key}
+              options={input.enum.map((enumValue) => ({
+                label:
+                  (enumLabels as z.GlobalMeta['enumLabels'])?.[String(enumValue)] ??
+                  String(enumValue),
+                value: String(enumValue),
+              }))}
+            />
+          );
         }
 
         return (
           <SelectSlot
             {...(sharedProps as Partial<ComponentProps<typeof Select>>)}
             key={key}
-          >
-            {input.enum.map((enumValue) => (
-              <option
-                key={String(enumValue)}
-                value={String(enumValue)}
-              >
-                {(enumLabels as z.GlobalMeta['enumLabels'])?.[String(enumValue)] ??
-                  String(enumValue)}
-              </option>
-            ))}
-          </SelectSlot>
+            options={input.enum.map((enumValue) => ({
+              label:
+                (enumLabels as z.GlobalMeta['enumLabels'])?.[String(enumValue)] ??
+                String(enumValue),
+              value: String(enumValue),
+            }))}
+          />
         );
       }
 

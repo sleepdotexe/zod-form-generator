@@ -57,7 +57,7 @@ const inputStyles = cva(
         field:
           'w-full h-full px-4 py-2.5 text-sm disabled:bg-zfg-disabled-background disabled:text-zfg-disabled-foreground dark:disabled:bg-zfg-disabled-background-dark dark:disabled:text-zfg-disabled-foreground-dark disabled:cursor-not-allowed',
         checkbox:
-          'relative w-5 h-5 flex items-center justify-center shrink-0 has-disabled:opacity-50 has-disabled:cursor-not-allowed',
+          'relative w-5 h-5 flex items-center justify-center shrink-0 has-disabled:opacity-50 has-disabled:cursor-not-allowed has-focus-visible:ring-2 ring-offset-2 ring-zfg-primary dark:ring-zfg-primary-dark',
       },
       icon: {
         withIcon: 'pr-7',
@@ -241,31 +241,20 @@ export const PhoneInput: Component<'input', PhoneInputAdditionalProps, 'onChange
     }))
     .sort((a, b) => (a.name && b.name ? a.name.localeCompare(b.name) : 0));
 
-  const mapCountriesToOptions = (c: typeof countries) =>
-    c.map(({ countryCode, name, callingCode }) => (
-      <option
-        key={countryCode}
-        suppressHydrationWarning
-        value={countryCode}
-      >
-        {name} (+{callingCode})
-      </option>
-    ));
+  const mapCountriesToOptions = (c: typeof countries): SelectOption[] =>
+    c.map(({ countryCode, name, callingCode }) => ({
+      label: `${name} (+${callingCode})`,
+      value: countryCode,
+    }));
 
-  const commonCountriesGroup = commonCountries.length ? (
-    <optgroup>
-      {mapCountriesToOptions(
+  const commonCountriesGroup = commonCountries.length
+    ? mapCountriesToOptions(
         countries.filter((c) => commonCountries.includes(c.countryCode))
-      )}
-    </optgroup>
-  ) : null;
+      )
+    : null;
 
-  const restCountriesGroup = (
-    <optgroup>
-      {mapCountriesToOptions(
-        countries.filter((c) => !commonCountries.includes(c.countryCode))
-      )}
-    </optgroup>
+  const restCountriesGroup = mapCountriesToOptions(
+    countries.filter((c) => !commonCountries.includes(c.countryCode))
   );
 
   return (
@@ -295,13 +284,14 @@ export const PhoneInput: Component<'input', PhoneInputAdditionalProps, 'onChange
           disabled={props.disabled ?? countries.length === 1}
           forceErrorStyles={forceErrorStyles || !!errors?.length}
           onChange={(e) => handleChange({ countryCode: e.target.value as CountryCode })}
+          options={[
+            ...(commonCountriesGroup ? [commonCountriesGroup] : []),
+            restCountriesGroup,
+          ]}
           showUnselectableDefault={false}
           unwrap
           value={phone.countryCode}
-        >
-          {commonCountriesGroup}
-          {restCountriesGroup}
-        </SelectSlot>
+        />
 
         <InputSlot
           {...props}
@@ -333,9 +323,15 @@ export const PhoneInput: Component<'input', PhoneInputAdditionalProps, 'onChange
   );
 };
 
+type SelectOption = {
+  label: string;
+  value: string;
+};
+
 export const Select: Component<
   'select',
   BaseInputProps & {
+    options: SelectOption[] | SelectOption[][];
     showUnselectableDefault?: boolean;
     unselectableOptionLabel?: string;
   },
@@ -354,6 +350,7 @@ export const Select: Component<
   errorSlot: ErrorSlot = FieldError,
   forceErrorStyles = false,
   showRequiredAsterisk,
+  options,
   showUnselectableDefault = true,
   unselectableOptionLabel = 'Select an option...',
   ...props
@@ -371,6 +368,17 @@ export const Select: Component<
       {unselectableOptionLabel}
     </option>
   ) : null;
+
+  const mapOptionsToElements = (opts: SelectOption[]) =>
+    opts.map((opt) => (
+      <option
+        key={opt.value}
+        suppressHydrationWarning
+        value={opt.value}
+      >
+        {opt.label}
+      </option>
+    ));
 
   const variant: VariantProps<typeof inputStyles>['variant'] =
     errors?.length || forceErrorStyles ? 'error' : 'default';
@@ -408,7 +416,12 @@ export const Select: Component<
           {...props}
         >
           {defaultValue}
-          {children}
+          {options.every((opt) => Array.isArray(opt))
+            ? options.map((optGroup, idx) => (
+                // biome-ignore lint/suspicious/noArrayIndexKey: No better index available here
+                <optgroup key={idx}>{mapOptionsToElements(optGroup)}</optgroup>
+              ))
+            : mapOptionsToElements(options)}
         </select>
 
         <span className='inline-block absolute top-1/2 right-3 -translate-y-1/2 pointer-events-none select-none'>
@@ -420,6 +433,8 @@ export const Select: Component<
           )}
         </span>
       </div>
+
+      {children}
 
       {!!errors?.length && (
         <div
@@ -471,7 +486,6 @@ export const Checkbox: Component<'input', BaseInputProps, 'onChange'> = ({
               variant,
               icon: undefined,
             }),
-            'has-focus-visible:ring-2 ring-offset-2 ring-zfg-primary dark:ring-zfg-primary-dark',
             checked &&
               'bg-zfg-primary dark:bg-zfg-primary-dark border-zfg-primary dark:border-zfg-primary-dark',
             className
@@ -525,5 +539,158 @@ export const Checkbox: Component<'input', BaseInputProps, 'onChange'> = ({
         </div>
       )}
     </InputWrapper>
+  );
+};
+
+export const RadioButtons: Component<
+  'input',
+  BaseInputProps & {
+    options: SelectOption[];
+  },
+  'onChange'
+> = ({
+  children,
+  unwrap,
+  icon: _,
+  label,
+  labelSlot: LabelSlot = FieldLabel,
+  description,
+  descriptionSlot: DescriptionSlot = FieldDescription,
+  errors,
+  errorSlot: ErrorSlot = FieldError,
+  forceErrorStyles = false,
+  showRequiredAsterisk,
+  options,
+  value,
+  onChange,
+  ...props
+}) => {
+  const groupId = useId();
+  const errorsId = useId();
+
+  return (
+    <InputWrapper unwrap={unwrap}>
+      {(label || description) && (
+        <div>
+          {label && (
+            <LabelSlot
+              showRequiredAsterisk={showRequiredAsterisk}
+              slot='legend'
+            >
+              {label}
+            </LabelSlot>
+          )}
+          {description && <DescriptionSlot>{description}</DescriptionSlot>}
+        </div>
+      )}
+
+      {options.map(({ label: radioLabel, value: radioValue }) => (
+        <RadioButton
+          {...props}
+          checked={value === radioValue}
+          descriptionSlot={DescriptionSlot}
+          forceErrorStyles={forceErrorStyles || !!errors?.length}
+          key={radioValue}
+          label={radioLabel}
+          labelSlot={LabelSlot}
+          name={groupId}
+          onChange={(e) =>
+            onChange?.({ ...e, target: { ...e.target, value: radioValue } })
+          }
+        />
+      ))}
+
+      {children}
+
+      {!!errors?.length && (
+        <div
+          className='flex flex-col gap-1 mb-1'
+          id={errorsId}
+        >
+          {errors.map((error) => (
+            <ErrorSlot key={error.code + error.message + error.path.join('.')}>
+              {error.message}
+            </ErrorSlot>
+          ))}
+        </div>
+      )}
+    </InputWrapper>
+  );
+};
+
+const RadioButton: Component<
+  'input',
+  Pick<
+    BaseInputProps,
+    | 'label'
+    | 'labelSlot'
+    | 'description'
+    | 'descriptionSlot'
+    | 'onChange'
+    | 'forceErrorStyles'
+  >,
+  'onChange'
+> = ({
+  id: suppliedId,
+  className,
+  label,
+  labelSlot: LabelSlot = FieldLabel,
+  description,
+  descriptionSlot: DescriptionSlot = FieldDescription,
+  checked,
+  forceErrorStyles = false,
+  ...props
+}) => {
+  const generatedId = useId();
+  const id = suppliedId ?? generatedId;
+
+  const variant: VariantProps<typeof inputStyles>['variant'] = forceErrorStyles
+    ? 'error'
+    : 'default';
+
+  return (
+    <div className='flex gap-3'>
+      <div
+        className={cn(
+          inputStyles({
+            inputType: 'checkbox',
+            variant,
+            icon: undefined,
+          }),
+          'rounded-full mt-0.5',
+          className
+        )}
+        {...{ [FORM_DATA_ATTRIBUTE_NAMES.RADIO_BUTTON]: '' }}
+      >
+        <span
+          className={cn(
+            'absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-2/3 h-2/3 bg-zfg-primary dark:bg-zfg-primary-dark rounded-full transition-all duration-200',
+            checked ? 'opacity-100 scale-100' : 'opacity-0 scale-0'
+          )}
+        />
+
+        <input
+          className='absolute inset-0 opacity-0 cursor-pointer focus:outline-none disabled:cursor-not-allowed'
+          id={id}
+          type='radio'
+          {...props}
+        />
+      </div>
+
+      {(label || description) && (
+        <div>
+          {label && (
+            <LabelSlot
+              className='font-normal'
+              htmlFor={id}
+              showRequiredAsterisk={false}
+            >
+              {label}
+            </LabelSlot>
+          )}
+          {description && <DescriptionSlot>{description}</DescriptionSlot>}
+        </div>
+      )}
+    </div>
   );
 };

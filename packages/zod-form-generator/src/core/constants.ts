@@ -10,6 +10,7 @@ export const FORM_DATA_ATTRIBUTE_NAMES = {
   INPUT_PHONE: 'data-zfg-input-phone',
   SELECT: 'data-zfg-select',
   CHECKBOX: 'data-zfg-checkbox',
+  RADIO_BUTTON: 'data-zfg-radio-button',
   BUTTON_CONTAINER: 'data-zfg-button-container',
   BUTTON: 'data-zfg-button',
 } as const;

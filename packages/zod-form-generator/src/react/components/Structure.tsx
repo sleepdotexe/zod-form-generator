@@ -1,4 +1,5 @@
 import { cva } from 'class-variance-authority';
+import { ComponentProps } from 'react';
 
 import { FORM_DATA_ATTRIBUTE_NAMES } from '../../core/constants';
 import { cn } from '../../core/util';
@@ -71,15 +72,14 @@ export const FormLegend: Component<'legend'> = ({ className, children, ...props 
   );
 };
 
-export const FieldLabel: Component<'label', { showRequiredAsterisk?: boolean }> = ({
-  className,
-  children,
-  showRequiredAsterisk = true,
-  ...props
-}) => {
+export const FieldLabel: Component<
+  'label',
+  { showRequiredAsterisk?: boolean; slot?: 'label' | 'legend' }
+> = ({ className, children, slot, showRequiredAsterisk = true, ...props }) => {
+  const Slot = slot === 'legend' ? ('legend' as 'label') : 'label';
+
   return (
-    // biome-ignore lint/a11y/noLabelWithoutControl: generic component
-    <label
+    <Slot
       className={cn(
         'font-semibold text-sm m-0 group-has-required:after:ml-0.5 group-has-required:after:text-zfg-error dark:group-has-required:after:text-zfg-error-dark cursor-pointer group-has-disabled:cursor-auto',
         showRequiredAsterisk &&
@@ -90,7 +90,7 @@ export const FieldLabel: Component<'label', { showRequiredAsterisk?: boolean }> 
       {...props}
     >
       {children}
-    </label>
+    </Slot>
   );
 };
 
