@@ -1,8 +1,8 @@
 {
   "name": "zod-form-generator",
-  "description": "",
+  "description": "Automatically generate controlled forms from Zod schemas.",
   "version": "0.1.0",
-  "author": "",
+  "author": "Aaron Campbell <hello@aaroncampbell.design>",
   "license": "MIT",
   "exports": {
     "./react": {
