@@ -1,5 +1,4 @@
 import { cva } from 'class-variance-authority';
-import { ComponentProps } from 'react';
 
 import { FORM_DATA_ATTRIBUTE_NAMES } from '../../core/constants';
 import { cn } from '../../core/util';

@@ -1,9 +1,11 @@
 {
   "name": "zod-form-generator",
-  "description": "Automatically generate controlled forms from Zod schemas.",
   "version": "0.1.0",
-  "author": "Aaron Campbell <hello@aaroncampbell.design>",
+  "type": "module",
   "license": "MIT",
+  "author": "Aaron Campbell <hello@aaroncampbell.design>",
+  "description": "Automatically generate controlled forms from Zod schemas.",
+  "homepage": "https://github.com/sleepdotexe/zod-form-generator/",
   "exports": {
     "./react": {
       "types": "./dist/react/index.d.ts",
@@ -23,13 +25,14 @@
     }
   },
   "files": ["dist", "styles", "README.md"],
-  "scripts": {
-    "build": "tsc -b",
-    "dev": "tsc -b --watch",
-    "clean": "rm -rf dist *.tsbuildinfo",
-    "lint": "tsc --noEmit"
-  },
   "keywords": ["zod", "form", "generator", "typescript"],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/sleepdotexe/zod-form-generator.git"
+  },
+  "bugs": {
+    "url": "https://github.com/sleepdotexe/zod-form-generator/issues"
+  },
   "peerDependencies": {
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
@@ -45,5 +48,11 @@
     "libphonenumber-js": "^1.12.13",
     "tailwind-merge": "^3.3.1",
     "zod": "^3.25.0 || ^4.0.0"
+  },
+  "scripts": {
+    "build": "tsc -b",
+    "dev": "tsc -b --watch",
+    "clean": "rm -rf dist *.tsbuildinfo",
+    "lint": "tsc --noEmit"
   }
 }
