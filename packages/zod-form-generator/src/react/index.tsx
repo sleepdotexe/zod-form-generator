@@ -1,37 +1,25 @@
-"use client";
+'use client';
 
-export * from "../core/customs";
+export * from '../core/customs';
 
-import { cn, mergeDeep } from "../core/util";
-import { generateEmptyObjectFromSchema } from "../core/zod-helpers";
-import React, { useEffect } from "react";
-import * as z from "zod/v4/core";
-import type { ZodForm } from "../core/types";
-import { type ComponentProps, useState, useTransition } from "react";
-import { Button, ButtonContainer, FormError } from "./components/Structure";
-import { Form } from "./components/Structure";
-import {
-  type CustomFormElements,
-  generateFields,
-  ShowErrorWhenFunction,
-} from "./generate-fields";
+import { useEffect, useState, useTransition } from 'react';
+import * as z from 'zod/v4/core';
 
-export type FormSubmitHandler<Schema extends z.$ZodObject> = (
-  data: z.infer<Schema>,
-  addErrors: (issue: Pick<z.$ZodIssue, "path" | "message">[]) => void
-) => Promise<unknown>;
+import { FORM_DATA_ATTRIBUTE_NAMES } from '../core/constants';
+import { cn, mergeDeep } from '../core/util';
+import { generateEmptyObjectFromSchema } from '../core/zod-helpers';
+import { Button, ButtonContainer, Form, FormError } from './components/Structure';
+import { generateFields } from './generate-fields';
 
-export type FormGeneratorOptions = Partial<{
-  formErrorPosition: "top" | "above_buttons" | "bottom";
-  showFieldErrors: "all" | "first";
-  showFieldErrorWhen: ShowErrorWhenFunction;
-  showRequiredAsterisk: boolean;
-  preventLeavingWhenDirty: boolean;
-}>;
+import type { CountryCode } from 'libphonenumber-js';
+import type React from 'react';
+import type { ComponentProps } from 'react';
+import type { DeepPartial, FormGeneratorOptions, ZodForm } from '../core/types';
+import type { CustomFormElements } from './generate-fields';
 
-export type FormGeneratorButton = {
+type FormGeneratorButton = {
   label: string;
-  onClick?: React.MouseEventHandler<HTMLButtonElement>;
+  props?: Omit<ComponentProps<typeof Button>, 'key' | 'children' | 'type'>;
 };
 
 type FormGeneratorButtons = {
@@ -39,17 +27,55 @@ type FormGeneratorButtons = {
   [key: string]: FormGeneratorButton;
 };
 
-export type FormGeneratorProps<Schema extends z.$ZodObject> = {
+export type FormSubmitHandler<Schema extends z.$ZodObject> = (
+  data: z.infer<Schema>,
+  addErrors: (issue: Pick<z.$ZodIssue, 'path' | 'message'>[]) => false
+  // biome-ignore lint/suspicious/noConfusingVoidType: User may implement the handler without returning a value.
+) => Promise<boolean | void>;
+
+export type FormGeneratorProps<
+  Schema extends z.$ZodObject,
+  AllowedCountries extends readonly CountryCode[] | undefined = undefined,
+> = {
   schema: Schema;
   onSubmit: FormSubmitHandler<Schema>;
-  initialData?: DeepPartial<z.infer<Schema>> | null;
+  initialData?: DeepPartial<z.output<Schema>>;
   disabled?: boolean;
   buttons?: FormGeneratorButtons;
   customElements?: CustomFormElements;
-  options?: FormGeneratorOptions;
+  options?: FormGeneratorOptions<AllowedCountries>;
 };
 
-export const FormGenerator = <Schema extends z.$ZodObject>({
+const scrollToFirstError = () => {
+  const firstFieldError = document.querySelector(
+    `[${FORM_DATA_ATTRIBUTE_NAMES.FIELD_ERROR}]`
+  );
+  const firstFormError = document.querySelector(
+    `[${FORM_DATA_ATTRIBUTE_NAMES.FORM_ERROR}]`
+  );
+
+  const toScrollTo = firstFieldError ?? firstFormError;
+  if (!toScrollTo) {
+    return;
+  }
+
+  toScrollTo.scrollIntoView({ block: 'center' });
+
+  if (firstFieldError) {
+    const nearestInput = firstFieldError
+      .closest('div:has([data-error])')
+      ?.querySelector('[data-error]');
+    console.log(nearestInput);
+    if (nearestInput) {
+      (nearestInput as HTMLElement).focus();
+    }
+  }
+};
+
+export const FormGenerator = <
+  Schema extends z.$ZodObject,
+  AllowedCountries extends readonly CountryCode[] | undefined = undefined,
+>({
   schema,
   onSubmit,
   initialData: providedData,
@@ -59,23 +85,25 @@ export const FormGenerator = <Schema extends z.$ZodObject>({
   options = {},
   children,
   ...props
-}: Omit<ComponentProps<"form">, "onSubmit"> & FormGeneratorProps<Schema>) => {
+}: Omit<ComponentProps<'form'>, 'onSubmit'> &
+  FormGeneratorProps<Schema, AllowedCountries>) => {
   const initialData = mergeDeep(
     generateEmptyObjectFromSchema(schema),
     providedData ?? {}
   );
 
-  const [isLoading, startTransition] = useTransition();
-
-  const [formState, setFormState] = useState<ZodForm<Schema>>({
+  const initialState: ZodForm<Schema> = {
     data: initialData,
     errors: z.safeParse(schema, initialData).error?.issues ?? null,
     isDirty: false,
     isTouched: false,
     dirtyFields: new Set(),
     touchedFields: new Set(),
-    hasAttemptedSubmit: false,
-  });
+    lastSubmissionAttemptTimestamp: null,
+  };
+
+  const [isLoading, startTransition] = useTransition();
+  const [formState, setFormState] = useState<ZodForm<Schema>>(initialState);
 
   const {
     form: FormSlot = Form,
@@ -85,34 +113,37 @@ export const FormGenerator = <Schema extends z.$ZodObject>({
   } = customElements;
 
   const {
-    formErrorPosition = "above_buttons",
+    formErrorPosition = 'above_buttons',
     preventLeavingWhenDirty = false,
-    showRequiredAsterisk = true,
-    showFieldErrors,
-    showFieldErrorWhen,
+    resetFormAfterSubmission = false,
+    buttons: buttonsOptions,
   } = options;
 
   const addErrors: Parameters<FormSubmitHandler<Schema>>[1] = (issues) => {
     const mappedIssues: z.$ZodIssue[] = issues.map((issue) => ({
       ...issue,
-      code: "custom",
-      input: "",
+      code: 'custom',
+      input: '',
     }));
 
     setFormState((prev) => ({
       ...prev,
       errors: [...(prev.errors ?? []), ...mappedIssues],
     }));
+
+    return false;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (disabled || isLoading) return;
+    if (disabled || isLoading) {
+      return;
+    }
 
     setFormState((prev) => ({
       ...prev,
-      hasAttemptedSubmit: true,
+      lastSubmissionAttemptTimestamp: Date.now(),
       errors: null,
     }));
 
@@ -127,36 +158,55 @@ export const FormGenerator = <Schema extends z.$ZodObject>({
       return;
     }
 
-    startTransition(() => {
-      onSubmit(data, addErrors);
+    startTransition(async () => {
+      const success = await onSubmit(data, addErrors);
+
+      setFormState((prev) => ({
+        ...prev,
+        lastSubmissionAttemptTimestamp: Date.now(),
+      }));
+
+      if (success !== false && resetFormAfterSubmission) {
+        setFormState(initialState);
+      }
     });
   };
 
   useEffect(() => {
-    if (!formState.isDirty || !preventLeavingWhenDirty) return;
+    if (!formState.isDirty || !preventLeavingWhenDirty) {
+      return;
+    }
 
     const handleBeforeUnload = (e: BeforeUnloadEvent) => {
       e.preventDefault();
     };
 
-    window.addEventListener("beforeunload", handleBeforeUnload);
-    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
   }, [preventLeavingWhenDirty, formState.isDirty]);
 
-  const formErrors = formState.errors?.filter(
-    (issue) => issue.path.length === 0
-  );
+  useEffect(() => {
+    if (formState.lastSubmissionAttemptTimestamp !== null) {
+      scrollToFirstError();
+    }
+  }, [formState.lastSubmissionAttemptTimestamp]);
+
+  const formErrors = formState.errors?.filter((issue) => issue.path.length === 0);
 
   return (
-    <FormSlot {...props} onSubmit={handleSubmit}>
+    <FormSlot
+      {...props}
+      {...{ [FORM_DATA_ATTRIBUTE_NAMES.FORM]: '' }}
+      onSubmit={handleSubmit}
+    >
       {!!formErrors?.length &&
         formErrors.map((issue) => (
           <FormErrorSlot
-            key={issue.code + issue.message + issue.input}
             className={cn(
-              formErrorPosition === "above_buttons" && "order-10",
-              formErrorPosition === "bottom" && "order-12"
+              formErrorPosition === 'above_buttons' && 'order-10',
+              formErrorPosition === 'bottom' && 'order-12'
             )}
+            key={issue.code + issue.message + issue.input}
           >
             {issue.message}
           </FormErrorSlot>
@@ -168,19 +218,22 @@ export const FormGenerator = <Schema extends z.$ZodObject>({
         setFormState,
         disabled,
         customElements,
-        showRequiredAsterisk,
-        showFieldErrors,
-        showFieldErrorWhen,
+        options,
       })}
 
       {children}
 
-      <ButtonContainerSlot className="order-11">
+      <ButtonContainerSlot className='order-11'>
         <Buttons
-          buttons={buttons}
           buttonSlot={button}
-          disabled={disabled}
+          buttons={buttons}
+          disabled={
+            disabled ||
+            (formState.lastSubmissionAttemptTimestamp !== null &&
+              !!formState.errors?.filter((issue) => issue.path.length > 0).length)
+          }
           isLoading={isLoading}
+          options={buttonsOptions}
           setFormState={setFormState}
         />
       </ButtonContainerSlot>
@@ -190,53 +243,62 @@ export const FormGenerator = <Schema extends z.$ZodObject>({
 
 type ButtonsProps<Schema extends z.$ZodObject> = {
   buttons?: FormGeneratorButtons;
-  buttonSlot: NonNullable<
-    FormGeneratorProps<Schema>["customElements"]
-  >["button"];
+  buttonSlot: NonNullable<FormGeneratorProps<Schema>['customElements']>['button'];
   disabled?: boolean;
   isLoading?: boolean;
   setFormState: React.Dispatch<React.SetStateAction<ZodForm<Schema>>>;
+  options?: FormGeneratorOptions['buttons'];
 };
 
 const Buttons = <Schema extends z.$ZodObject>({
   buttons = {
     submit: {
-      label: "Submit",
+      label: 'Submit',
     },
   },
   buttonSlot: ButtonSlot = Button,
   disabled,
   isLoading,
   setFormState,
+  options,
 }: ButtonsProps<Schema>) => {
-  const { submit, ...otherButtons } = buttons;
+  const {
+    submit: { label: submitLabel, props: submitProps },
+    ...otherButtons
+  } = buttons;
 
   return (
     <>
       <ButtonSlot
-        type="submit"
+        {...submitProps}
+        disabled={disabled || isLoading}
         onClick={(e) => {
-          submit.onClick?.(e);
+          submitProps?.onClick?.(e);
           setFormState((prev) => ({
             ...prev,
-            hasAttemptedSubmit: true,
+            lastSubmissionAttemptTimestamp: Date.now(),
           }));
         }}
-        disabled={disabled || isLoading}
+        size={options?.size}
+        type='submit'
       >
-        {isLoading ? "Submitting..." : submit.label}
+        {isLoading ? 'Submitting...' : submitLabel}
       </ButtonSlot>
 
-      {Object.entries(otherButtons).map(([key, button]) => (
+      {Object.entries(otherButtons).map(([key, { label, props: buttonProps }]) => (
         <ButtonSlot
+          {...buttonProps}
           key={key}
-          type="button"
-          onClick={button.onClick}
-          variant="outline"
+          size={options?.size}
+          type='button'
+          variant={buttonProps?.variant ?? 'outline'}
         >
-          {button.label}
+          {label}
         </ButtonSlot>
       ))}
     </>
   );
 };
+
+export { FORM_DATA_ATTRIBUTE_NAMES };
+export type { FormGeneratorOptions };

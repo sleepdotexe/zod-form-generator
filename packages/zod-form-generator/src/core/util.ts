@@ -1,8 +1,11 @@
-import { clsx, type ClassValue } from "clsx";
-import { twMerge } from "tailwind-merge";
-import * as z from "zod/v4/core";
+import { clsx } from 'clsx';
+import { twMerge } from 'tailwind-merge';
 
-export const boolAttribute = (bool: boolean) => (bool ? "" : undefined);
+import type { ClassValue } from 'clsx';
+import type * as z from 'zod/v4/core';
+import type { DeepNullable, DeepPartial } from './types';
+
+export const boolAttribute = (bool: boolean) => (bool ? '' : undefined);
 
 export const cn = (...inputs: ClassValue[]) => {
   return twMerge(clsx(inputs));
@@ -12,7 +15,7 @@ export const mergeDeep = <T extends object>(
   source: DeepNullable<T>,
   ...objects: DeepPartial<DeepNullable<T>>[]
 ): DeepNullable<T> => {
-  const isObject = (obj: unknown) => obj && typeof obj === "object";
+  const isObject = (obj: unknown) => obj && typeof obj === 'object';
 
   const output = objects.reduce((prev, obj) => {
     Object.keys(obj).forEach((key) => {
@@ -25,8 +28,7 @@ export const mergeDeep = <T extends object>(
           oVal
         ) as (typeof prev)[keyof typeof prev];
       } else {
-        prev[key as keyof typeof prev] =
-          oVal as (typeof prev)[keyof typeof prev];
+        prev[key as keyof typeof prev] = oVal as (typeof prev)[keyof typeof prev];
       }
     });
 
@@ -36,18 +38,11 @@ export const mergeDeep = <T extends object>(
   return output as DeepNullable<T>;
 };
 
-export const getNestedValueByPath = (
-  object: object,
-  pathKeys: string[]
-): unknown => {
+export const getNestedValueByPath = (object: object, pathKeys: string[]): unknown => {
   let current = object;
 
   for (const key of pathKeys) {
-    if (
-      current === null ||
-      current === undefined ||
-      !Object.hasOwn(current, key)
-    ) {
+    if (current === null || current === undefined || !Object.hasOwn(current, key)) {
       return undefined;
     }
 
@@ -62,10 +57,14 @@ export const setNestedValueByPath = <T extends object>(
   pathKeys: string[],
   value: unknown
 ): T => {
-  if (pathKeys.length === 0) return object;
+  if (pathKeys.length === 0) {
+    return object;
+  }
 
   const [first, ...rest] = pathKeys;
-  if (!first) return object;
+  if (!first) {
+    return object;
+  }
 
   if (rest.length === 0) {
     return {
@@ -94,17 +93,17 @@ export const coerceAnyOfToSingleInput = (
   }
 
   const flattenedTypes = anyOf.flatMap((e) => (e.anyOf ? e.anyOf : [e]));
-  const nonNullTypes = flattenedTypes.filter((e) => e.type !== "null");
-  metadata.nullable = flattenedTypes.some((e) => e.type === "null");
+  const nonNullTypes = flattenedTypes.filter((e) => e.type !== 'null');
+  metadata.nullable = flattenedTypes.some((e) => e.type === 'null');
 
-  if (nonNullTypes.length === 1) {
+  if (nonNullTypes.length === 1 && nonNullTypes[0]) {
     return {
       ...metadata,
-      ...nonNullTypes[0]!,
+      ...nonNullTypes[0],
     };
   }
 
-  if (nonNullTypes.every((e) => e.type === "string")) {
+  if (nonNullTypes.every((e) => e.type === 'string')) {
     const hasMixedFormats = nonNullTypes.some(
       (e) => e.format !== nonNullTypes[0]?.format
     );
@@ -114,7 +113,7 @@ export const coerceAnyOfToSingleInput = (
 
     if (hasMixedFormats || hasEnumsAndNonEnums) {
       throw new Error(
-        "Cannot automatically generate an input for a schema with mixed formats. Please check your union types do not have mixed formats (eg. email and strings, enums and non-enums, etc)."
+        'Cannot automatically generate an input for a schema with mixed formats. Please check your union types do not have mixed formats (eg. email and strings, enums and non-enums, etc).'
       );
     }
 
@@ -123,7 +122,7 @@ export const coerceAnyOfToSingleInput = (
     if (nonNullTypes.every((e) => e.enum)) {
       return {
         ...metadata,
-        type: "string",
+        type: 'string',
         format,
         enum: nonNullTypes.flatMap((e) => e.enum ?? []),
       };
@@ -131,24 +130,22 @@ export const coerceAnyOfToSingleInput = (
 
     return {
       ...metadata,
-      type: "string",
+      type: 'string',
       format,
-      minLength: nonNullTypes.sort(
-        (a, b) => (a.minLength ?? 0) - (b.minLength ?? 0)
-      )[0]?.minLength,
+      minLength: nonNullTypes.sort((a, b) => (a.minLength ?? 0) - (b.minLength ?? 0))[0]
+        ?.minLength,
       maxLength: nonNullTypes.sort(
         (a, b) => (b.maxLength ?? Infinity) - (a.maxLength ?? Infinity)
       )[0]?.maxLength,
     };
   }
 
-  if (nonNullTypes.every((e) => e.type === "number" || e.type === "integer")) {
+  if (nonNullTypes.every((e) => e.type === 'number' || e.type === 'integer')) {
     return {
       ...metadata,
-      type: "number",
-      minimum: nonNullTypes.sort(
-        (a, b) => (a.minimum ?? 0) - (b.minimum ?? 0)
-      )[0]?.minimum,
+      type: 'number',
+      minimum: nonNullTypes.sort((a, b) => (a.minimum ?? 0) - (b.minimum ?? 0))[0]
+        ?.minimum,
       maximum: nonNullTypes.sort(
         (a, b) => (b.maximum ?? Infinity) - (a.maximum ?? Infinity)
       )[0]?.maximum,
@@ -156,6 +153,6 @@ export const coerceAnyOfToSingleInput = (
   }
 
   throw new Error(
-    "Unsupported anyOf schema detected. Cannot automatically generate an input for the provided schema."
+    'Unsupported anyOf schema detected. Cannot automatically generate an input for the provided schema.'
   );
 };

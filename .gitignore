@@ -3,10 +3,11 @@ node_modules
 .pnp
 .pnp.js
 
-# Package-level lock files (workspace uses root lock file)
-packages/*/package-lock.json
-packages/*/yarn.lock
-packages/*/pnpm-lock.yaml
+# Lock files
+bun.lock
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
 
 # TBD
 packages/docs

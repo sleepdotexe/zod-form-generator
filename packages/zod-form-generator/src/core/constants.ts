@@ -1,0 +1,16 @@
+export const FORM_DATA_ATTRIBUTE_NAMES = {
+  FORM: 'data-zfg-form',
+  FORM_ERROR: 'data-zfg-form-error',
+  FIELDSET: 'data-zfg-fieldset',
+  LEGEND: 'data-zfg-legend',
+  LABEL: 'data-zfg-label',
+  FIELD_DESCRIPTION: 'data-zfg-field-description',
+  FIELD_ERROR: 'data-zfg-field-error',
+  INPUT: 'data-zfg-input',
+  INPUT_PHONE: 'data-zfg-input-phone',
+  SELECT: 'data-zfg-select',
+  CHECKBOX: 'data-zfg-checkbox',
+  RADIO_BUTTON: 'data-zfg-radio-button',
+  BUTTON_CONTAINER: 'data-zfg-button-container',
+  BUTTON: 'data-zfg-button',
+} as const;

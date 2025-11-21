@@ -1,15 +1,20 @@
-import React from "react";
-import type { Component } from "../../core/types";
-import { cn } from "../../core/util";
-import { cva, type VariantProps } from "class-variance-authority";
+import { cva } from 'class-variance-authority';
 
-export const Form: Component<"form"> = ({ className, children, ...props }) => {
+import { FORM_DATA_ATTRIBUTE_NAMES } from '../../core/constants';
+import { cn } from '../../core/util';
+import { ErrorIcon } from './Icons';
+
+import type { VariantProps } from 'class-variance-authority';
+import type { Component } from '../../core/types';
+
+export const Form: Component<'form'> = ({ className, children, ...props }) => {
   return (
     <form
       className={cn(
-        "flex flex-col justify-start items-stretch gap-9 max-w-md",
+        'flex flex-col justify-start items-stretch gap-9 max-w-md w-full text-zfg-text dark:text-zfg-text-dark',
         className
       )}
+      {...{ [FORM_DATA_ATTRIBUTE_NAMES.FORM]: '' }}
       {...props}
     >
       {children}
@@ -17,46 +22,48 @@ export const Form: Component<"form"> = ({ className, children, ...props }) => {
   );
 };
 
-export const FormError: Component<"p"> = ({
-  className,
-  children,
-  ...props
-}) => {
+export const FormError: Component<'p'> = ({ className, children, ...props }) => {
   return (
     <p
       className={cn(
-        "text-red-600 bg-red-100/50 dark:bg-red-950/50 dark:text-red-400 border border-red-300 dark:border-red-900 px-4 py-3 rounded-md text-xs font-medium motion-safe:animate-fade-in",
+        'flex gap-3 text-zfg-error dark:text-zfg-error-dark bg-zfg-error/5 dark:bg-zfg-error-dark/5 border border-zfg-error/40 dark:border-zfg-error-dark/40 px-4 py-3 rounded-md text-xs font-medium motion-safe:animate-zfg-fade-in',
         className
       )}
+      {...{ [FORM_DATA_ATTRIBUTE_NAMES.FORM_ERROR]: '' }}
       {...props}
     >
-      {children}
+      <ErrorIcon className='w-[1.5em] -mt-px h-auto' />
+      <span>{children}</span>
     </p>
   );
 };
 
-export const Fieldset: Component<"fieldset", { legend?: string }> = ({
-  className,
-  children,
-  legend,
-  ...props
-}) => {
+export const Fieldset: Component<
+  'fieldset',
+  { legend?: string; description?: string }
+> = ({ className, children, legend, description, ...props }) => {
   return (
-    <fieldset className={cn("flex flex-col gap-4", className)} {...props}>
-      {legend && <FormLegend>{legend}</FormLegend>}
+    <fieldset
+      className={cn('flex flex-col gap-4', className)}
+      {...{ [FORM_DATA_ATTRIBUTE_NAMES.FIELDSET]: '' }}
+      {...props}
+    >
+      {(legend || description) && (
+        <div>
+          {legend && <FormLegend>{legend}</FormLegend>}
+          {description && <FieldDescription>{description}</FieldDescription>}
+        </div>
+      )}
       {children}
     </fieldset>
   );
 };
 
-export const FormLegend: Component<"legend"> = ({
-  className,
-  children,
-  ...props
-}) => {
+export const FormLegend: Component<'legend'> = ({ className, children, ...props }) => {
   return (
     <legend
-      className={cn("inline-block text-base font-bold m-0 mb-4", className)}
+      className={cn('inline-block text-lg font-bold m-0 mb-1', className)}
+      {...{ [FORM_DATA_ATTRIBUTE_NAMES.LEGEND]: '' }}
       {...props}
     >
       {children}
@@ -65,35 +72,35 @@ export const FormLegend: Component<"legend"> = ({
 };
 
 export const FieldLabel: Component<
-  "label",
-  { showRequiredAsterisk?: boolean }
-> = ({ className, children, showRequiredAsterisk = true, ...props }) => {
+  'label',
+  { showRequiredAsterisk?: boolean; slot?: 'label' | 'legend' }
+> = ({ className, children, slot, showRequiredAsterisk = true, ...props }) => {
+  const Slot = slot === 'legend' ? ('legend' as 'label') : 'label';
+
   return (
-    // biome-ignore lint/a11y/noLabelWithoutControl: generic component
-    <label
+    <Slot
       className={cn(
-        "font-semibold text-sm m-0  group-has-required:after:ml-0.5 group-has-required:after:text-red-600 dark:group-has-required:after:text-red-400",
-        showRequiredAsterisk && "group-has-required:after:content-['*']",
+        'font-semibold text-sm m-0 group-has-required:after:ml-0.5 group-has-required:after:text-zfg-error dark:group-has-required:after:text-zfg-error-dark cursor-pointer group-has-disabled:cursor-auto',
+        showRequiredAsterisk &&
+          "group-has-required:after:content-['*'/''] after:[speak:none]",
         className
       )}
+      {...{ [FORM_DATA_ATTRIBUTE_NAMES.LABEL]: '' }}
       {...props}
     >
       {children}
-    </label>
+    </Slot>
   );
 };
 
-export const FieldDescription: Component<"p"> = ({
-  className,
-  children,
-  ...props
-}) => {
+export const FieldDescription: Component<'p'> = ({ className, children, ...props }) => {
   return (
     <p
       className={cn(
-        "font-normal text-xs m-0 mb-1 text-neutral-600 dark:text-neutral-400",
+        'font-normal text-xs max-w-[45ch] m-0 mb-1 text-zfg-text-description dark:text-zfg-text-description-dark',
         className
       )}
+      {...{ [FORM_DATA_ATTRIBUTE_NAMES.FIELD_DESCRIPTION]: '' }}
       {...props}
     >
       {children}
@@ -101,32 +108,27 @@ export const FieldDescription: Component<"p"> = ({
   );
 };
 
-export const FieldError: Component<"p"> = ({
-  className,
-  children,
-  ...props
-}) => {
+export const FieldError: Component<'p'> = ({ className, children, ...props }) => {
   return (
     <p
       className={cn(
-        "text-red-600 dark:text-red-400 text-xs font-medium motion-safe:animate-fade-in",
+        'flex gap-2 text-zfg-error dark:text-zfg-error-dark text-xs font-medium motion-safe:animate-zfg-fade-in',
         className
       )}
+      {...{ [FORM_DATA_ATTRIBUTE_NAMES.FIELD_ERROR]: '' }}
       {...props}
     >
-      {children}
+      <ErrorIcon className='w-[1.5em] -mt-px h-auto' />
+      <span>{children}</span>
     </p>
   );
 };
 
-export const ButtonContainer: Component<"div"> = ({
-  className,
-  children,
-  ...props
-}) => {
+export const ButtonContainer: Component<'div'> = ({ className, children, ...props }) => {
   return (
     <div
-      className={cn("flex flex-col items-stretch gap-2", className)}
+      className={cn('flex flex-col items-stretch gap-2', className)}
+      {...{ [FORM_DATA_ATTRIBUTE_NAMES.BUTTON_CONTAINER]: '' }}
       {...props}
     >
       {children}
@@ -135,31 +137,38 @@ export const ButtonContainer: Component<"div"> = ({
 };
 
 const buttonStlyes = cva(
-  "flex justify-center items-center gap-[0.8em] px-[2em] py-[0.75em] text-center whitespace-nowrap rounded-md max-w-full text-sm font-semibold cursor-pointer disabled:cursor-not-allowed disabled:opacity-50 border-2 border-transparent transition-colors duration-200",
+  'flex justify-center items-center gap-[0.8em] px-[2em] py-[0.75em] whitespace-nowrap rounded-md max-w-full text-sm text-center text-zfg-primary dark:text-zfg-primary-dark font-semibold cursor-pointer disabled:cursor-not-allowed disabled:opacity-50 border-2 border-transparent transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-zfg-primary dark:focus-visible:ring-zfg-primary-dark focus-visible:ring-offset-2',
   {
     variants: {
       variant: {
         filled:
-          "bg-black hover:bg-neutral-800 focus-visible:bg-neutral-800 active:bg-neutral-700 text-white dark:bg-white dark:hover:bg-neutral-200 dark:focus-visible:bg-neutral-200 dark:active:bg-neutral-300 dark:text-black",
-        outline: "border-current",
+          'bg-zfg-primary dark:bg-zfg-primary-dark not-disabled:hover:bg-zfg-primary-hover dark:not-disabled:hover:bg-zfg-primary-hover-dark not-disabled:focus-visible:bg-zfg-primary-hover dark:not-disabled:focus-visible:bg-zfg-primary-hover-dark not-disabled:active:bg-zfg-primary-active dark:not-disabled:active:bg-zfg-primary-active-dark text-zfg-primary-contrast dark:text-zfg-primary-contrast-dark',
+        outline: 'border-current',
+      },
+      size: {
+        full: '',
+        content: 'self-start',
       },
     },
     defaultVariants: {
-      variant: "filled",
+      variant: 'filled',
+      size: 'full',
     },
   }
 );
 
-export const Button: Component<"button", VariantProps<typeof buttonStlyes>> = ({
+export const Button: Component<'button', VariantProps<typeof buttonStlyes>> = ({
   className,
   children,
-  type = "button",
-  variant = "filled",
+  type = 'button',
+  variant,
+  size,
   ...props
 }) => {
   return (
     <button
-      className={cn(buttonStlyes({ variant }), className)}
+      className={cn(buttonStlyes({ variant, size }), className)}
+      {...{ [FORM_DATA_ATTRIBUTE_NAMES.BUTTON]: '' }}
       type={type}
       {...props}
     >

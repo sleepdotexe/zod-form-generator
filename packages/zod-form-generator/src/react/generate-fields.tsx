@@ -1,27 +1,26 @@
-import React from "react";
-import type { ZodForm } from "../core/types";
+import { Fragment } from 'react';
+import * as z from 'zod/v4/core';
+
 import {
   boolAttribute,
   coerceAnyOfToSingleInput,
   getNestedValueByPath,
   setNestedValueByPath,
-} from "../core/util";
-import { AsYouType, type CountryCode } from "libphonenumber-js";
-import type { ComponentProps, Dispatch, SetStateAction } from "react";
-import * as z from "zod/v4/core";
+} from '../core/util';
+import { determineFieldStartingValue, toJSONSchema } from '../core/zod-helpers';
+import { Checkbox, Input, PhoneInput, RadioButtons, Select } from './components/Fields';
 import {
   FieldDescription,
   FieldError,
   FieldLabel,
   Fieldset,
   FormError,
-  type Form,
-  type FormLegend,
-  type Button,
-  type ButtonContainer,
-} from "./components/Structure";
-import { Input } from "./components/Fields";
-import { FormGeneratorOptions } from ".";
+} from './components/Structure';
+
+import type { ComponentProps, Dispatch, SetStateAction } from 'react';
+import type { FormGeneratorOptions, ZodForm } from '../core/types';
+import type { FormGenerator } from '.';
+import type { Button, ButtonContainer, Form, FormLegend } from './components/Structure';
 
 export type CustomFormElements = Partial<{
   form: typeof Form;
@@ -30,6 +29,8 @@ export type CustomFormElements = Partial<{
   label: typeof FieldLabel;
   description: typeof FieldDescription;
   input: typeof Input;
+  select: typeof Select;
+  checkbox: typeof Checkbox;
   fieldError: typeof FieldError;
   formError: typeof FormError;
   buttonContainer: typeof ButtonContainer;
@@ -41,18 +42,17 @@ type GenerateFieldsProps<Schema extends z.$ZodObject> = {
   formState: ZodForm<Schema>;
   setFormState: Dispatch<SetStateAction<ZodForm<Schema>>>;
   disabled?: boolean;
-  defaultCountry?: CountryCode;
-  customElements?: CustomFormElements;
-} & Pick<
-  FormGeneratorOptions,
-  "showFieldErrors" | "showFieldErrorWhen" | "showRequiredAsterisk"
->;
+} & Pick<ComponentProps<typeof FormGenerator>, 'customElements' | 'options'>;
 
 export const generateFields = <Schema extends z.$ZodObject>(
   props: GenerateFieldsProps<Schema>
 ) => {
   const { schema, ...restProps } = props;
-  const initalJsonSchema = z.toJSONSchema(schema, { io: "input" });
+  const initalJsonSchema = toJSONSchema(schema);
+
+  if (props.options?.debug) {
+    console.log('Form JSON Schema:', initalJsonSchema);
+  }
 
   return _generateFields<typeof schema>({
     schema,
@@ -61,18 +61,7 @@ export const generateFields = <Schema extends z.$ZodObject>(
   });
 };
 
-export type ShowErrorWhenFunction = (options: {
-  formIsTouched: boolean;
-  formIsDirty: boolean;
-  formHasError: boolean;
-  fieldValue: unknown;
-  fieldIsTouched: boolean;
-  fieldIsDirty: boolean;
-  fieldHasError: boolean;
-  submissionAttempted: boolean;
-}) => boolean;
-
-const showErrorWhenDefault: ShowErrorWhenFunction = ({
+const showErrorWhenDefault: FormGeneratorOptions['showFieldErrorWhen'] = ({
   submissionAttempted,
   formIsDirty,
   fieldIsTouched,
@@ -93,13 +82,10 @@ const _generateFields = <Schema extends z.$ZodObject>(
     setFormState,
     disabled: formDisabled,
     pathToKey = [],
-    defaultCountry = "US",
     customElements = {},
-    showRequiredAsterisk,
-    showFieldErrors = "all",
-    showFieldErrorWhen = showErrorWhenDefault,
+    options,
   } = props;
-  if (typeof jsonSchema === "boolean") {
+  if (typeof jsonSchema === 'boolean') {
     return null;
   }
 
@@ -110,31 +96,61 @@ const _generateFields = <Schema extends z.$ZodObject>(
   }
 
   const {
-    formError: FormErrorSlot = FormError,
-    input: InputSlot = Input,
     fieldset: FieldsetSlot = Fieldset,
     label: LabelSlot = FieldLabel,
     description: DescriptionSlot = FieldDescription,
+    input: InputSlot = Input,
+    select: SelectSlot = Select,
+    checkbox: CheckboxSlot = Checkbox,
+    formError: FormErrorSlot = FormError,
     fieldError: FieldErrorSlot = FieldError,
   } = customElements;
 
+  const {
+    showRequiredAsterisk = true,
+    showFieldErrors,
+    showFieldErrorWhen = showErrorWhenDefault,
+    phoneFields,
+  } = options ?? {};
+
   return Object.entries(properties).map(([key, value]) => {
-    if (typeof value === "boolean") {
+    if (typeof value === 'boolean') {
       return null;
     }
 
-    const input: z.JSONSchema.JSONSchema = coerceAnyOfToSingleInput(value);
-    const dotPathToKey = [...pathToKey, key].join(".");
+    const input: z.JSONSchema.JSONSchema & z.GlobalMeta = coerceAnyOfToSingleInput(value);
+    const dotPathToKey = [...pathToKey, key].join('.');
 
-    if (input.type === "object" && input.properties) {
-      const { title } = input;
+    if (!input.type || input.type === 'null') {
+      return null;
+    }
+
+    if (input.type === 'object') {
+      if (!input.properties) {
+        return null;
+      }
+
+      const { title, description, unwrap, readOnly } = input;
 
       const fieldsetErrors = formState.errors
-        ?.filter((issue) => issue.path.join(".") === dotPathToKey)
-        .slice(0, showFieldErrors === "first" ? 1 : undefined);
+        ?.filter((issue) => issue.path.join('.') === dotPathToKey)
+        .slice(0, showFieldErrors === 'first' ? 1 : undefined);
+
+      const Wrapper = unwrap ? Fragment : FieldsetSlot;
+
+      const fieldsetProps = unwrap
+        ? {}
+        : {
+            legend: title,
+            description,
+            disabled: formDisabled || readOnly,
+          };
 
       return (
-        <FieldsetSlot key={key} legend={title}>
+        <Wrapper
+          {...fieldsetProps}
+          key={key}
+        >
           {!!fieldsetErrors?.length &&
             fieldsetErrors.map((issue) => (
               <FormErrorSlot key={issue.code + issue.message + issue.input}>
@@ -147,7 +163,7 @@ const _generateFields = <Schema extends z.$ZodObject>(
             jsonSchema: input,
             pathToKey: [...pathToKey, key],
           })}
-        </FieldsetSlot>
+        </Wrapper>
       );
     }
 
@@ -159,74 +175,79 @@ const _generateFields = <Schema extends z.$ZodObject>(
       placeholder,
       title,
       nullable,
+      readOnly,
+      unwrap,
     } = input;
 
     const fieldIsTouched = formState.touchedFields.has(dotPathToKey);
     const fieldIsDirty = formState.dirtyFields.has(dotPathToKey);
     const fieldIsRequired = required?.includes(key) && !nullable;
 
-    const fallbackValue = nullable ? null : "";
-
-    const possibleValue = getNestedValueByPath(formState.data, [
-      ...pathToKey,
-      key,
-    ]);
-    const valueAtKey =
-      typeof possibleValue === "string" || Array.isArray(possibleValue)
-        ? possibleValue
-        : fallbackValue;
+    const valueWhenEmpty = determineFieldStartingValue(value, fieldIsRequired);
+    const valueFromState = getNestedValueByPath(formState.data, [...pathToKey, key]);
+    const valueFormattedForInput =
+      typeof valueFromState === 'string'
+        ? valueFromState
+        : typeof valueFromState === 'number'
+          ? valueFromState.toString()
+          : Array.isArray(valueFromState)
+            ? valueFromState
+            : null;
 
     const thisFieldErrors = formState.errors
-      ?.filter((issue) => issue.path.join(".") === dotPathToKey)
-      .slice(0, showFieldErrors === "first" ? 1 : undefined);
+      ?.filter((issue) => issue.path.join('.') === dotPathToKey)
+      .slice(0, showFieldErrors === 'first' ? 1 : undefined);
 
     const showErrors = showFieldErrorWhen({
       formIsTouched: formState.isTouched,
       formIsDirty: formState.isDirty,
       formHasError: !!formState.errors?.length,
-      fieldValue: valueAtKey,
+      fieldValue: valueFormattedForInput,
       fieldIsTouched,
       fieldIsDirty,
       fieldHasError: !!thisFieldErrors?.length,
-      submissionAttempted: formState.hasAttemptedSubmit,
+      submissionAttempted: !!formState.lastSubmissionAttemptTimestamp,
     });
 
     const thisFieldFlattenedErrors = thisFieldErrors?.flatMap((issue) =>
-      issue.code === "invalid_union" ? issue.errors.flat() : [issue]
+      issue.code === 'invalid_union' ? issue.errors.flat() : [issue]
     );
 
-    const sharedProps: Partial<ComponentProps<typeof Input>> = {
+    const setValueInState = (value: string | number | boolean | null | undefined) =>
+      setFormState((prev) => {
+        const newData: typeof prev.data = setNestedValueByPath(
+          prev.data,
+          [...pathToKey, key],
+          value?.toString().length === 0 ? valueWhenEmpty : value
+        );
+        return {
+          ...prev,
+          data: newData,
+          errors: z.safeParse(schema, newData).error?.issues ?? null,
+          dirtyFields: prev.dirtyFields.add(dotPathToKey),
+          isDirty: true,
+        };
+      });
+
+    const sharedProps: Partial<ComponentProps<typeof Input | typeof Select>> = {
       labelSlot: LabelSlot,
       descriptionSlot: DescriptionSlot,
       errorSlot: FieldErrorSlot,
-      value: undefined,
+      value: valueFormattedForInput ?? '',
       label: title ?? key,
-      placeholder: placeholder as z.GlobalMeta["placeholder"],
+      placeholder,
       description,
-      autoComplete: autoComplete as z.GlobalMeta["autoComplete"],
-      inputMode: inputMode as z.GlobalMeta["inputMode"],
+      autoComplete,
+      inputMode,
       required: fieldIsRequired,
       errors: showErrors ? thisFieldFlattenedErrors : undefined,
-      disabled: formDisabled,
+      disabled: formDisabled || readOnly,
       showRequiredAsterisk,
-      onChange: (e) =>
-        setFormState((prev) => {
-          const newData: typeof prev.data = setNestedValueByPath(
-            prev.data,
-            [...pathToKey, key],
-            e.target.value.length > 0 ? e.target.value : fallbackValue
-          );
-          return {
-            ...prev,
-            data: newData,
-            errors: z.safeParse(schema, newData).error?.issues ?? null,
-            dirtyFields: prev.dirtyFields.add(dotPathToKey),
-            isDirty: true,
-          };
-        }),
+      unwrap,
+      onChange: (e) => setValueInState(e.target.value),
       onBlur: () =>
         setFormState((prev) => {
-          if (prev.hasAttemptedSubmit) {
+          if (prev.lastSubmissionAttemptTimestamp !== null) {
             return prev;
           }
 
@@ -237,124 +258,134 @@ const _generateFields = <Schema extends z.$ZodObject>(
             touchedFields: prev.touchedFields.add(dotPathToKey),
           };
         }),
-      "aria-required": fieldIsRequired,
-      "aria-invalid": showErrors && !!thisFieldFlattenedErrors?.length,
-      "data-dirty": boolAttribute(fieldIsDirty),
-      "data-error": boolAttribute(!!thisFieldFlattenedErrors?.length),
-      "data-touched": boolAttribute(fieldIsTouched),
+      'aria-required': fieldIsRequired,
+      'aria-invalid': showErrors && !!thisFieldFlattenedErrors?.length,
+      'data-dirty': boolAttribute(fieldIsDirty),
+      'data-error': boolAttribute(!!thisFieldFlattenedErrors?.length),
+      'data-touched': boolAttribute(fieldIsTouched),
     };
 
-    if (type === "string") {
+    if (type === 'string') {
       if (input.enum) {
         const { enumLabels, inputType } = input;
 
-        if (inputType === "radio") {
-          return null;
-
-          // return (
-          //   <RadioButtons
-          //     {...(sharedProps as Partial<ComponentProps<typeof Input>>)}
-          //     key={key}
-          //     options={input.enum.map((enumValue) => ({
-          //       value: String(enumValue),
-          //       label:
-          //         (enumLabels as z.GlobalMeta["enumLabels"])?.[
-          //           String(enumValue)
-          //         ] ?? String(enumValue),
-          //     }))}
-          //   />
-          // );
+        if (inputType === 'radio') {
+          return (
+            <RadioButtons
+              {...(sharedProps as Partial<ComponentProps<typeof Input>>)}
+              key={key}
+              options={input.enum.map((enumValue) => ({
+                label:
+                  (enumLabels as z.GlobalMeta['enumLabels'])?.[String(enumValue)] ??
+                  String(enumValue),
+                value: String(enumValue),
+              }))}
+            />
+          );
         }
 
-        return null;
-
-        //   return (
-        //     <Select
-        //       {...(sharedProps as Partial<ComponentProps<typeof Select>>)}
-        //       key={key}
-        //       options={input.enum.map((enumValue) => ({
-        //         value: String(enumValue),
-        //         label:
-        //           (enumLabels as z.GlobalMeta["enumLabels"])?.[
-        //             String(enumValue)
-        //           ] ?? String(enumValue),
-        //       }))}
-        //     />
-        //   );
-      }
-
-      const { format, inputType, pattern, minLength, maxLength } = input;
-
-      if (inputType === "tel") {
         return (
-          <InputSlot
-            {...sharedProps}
+          <SelectSlot
+            {...(sharedProps as Partial<ComponentProps<typeof Select>>)}
             key={key}
-            type="tel"
-            inputMode="tel"
-            autoComplete="tel-national"
-            onChange={(e) => {
-              let formattedValue = e.target.value;
-
-              // fixes a bug when trying to backspace numbers formatted with brackets/dashes
-              // if you backspace a value like "(03)", the new value is "(03"
-              // which then gets formatted back to "(03)" again, making it impossible to delete
-              // this removes both brackets if there isn't an opening and closing bracket present
-              if (
-                e.target.value.includes("(") &&
-                !e.target.value.includes(")")
-              ) {
-                formattedValue = e.target.value;
-              } else {
-                formattedValue = new AsYouType(defaultCountry).input(
-                  e.target.value
-                );
-              }
-
-              e.target.value = formattedValue;
-              sharedProps.onChange?.(e);
-            }}
+            options={input.enum.map((enumValue) => ({
+              label:
+                (enumLabels as z.GlobalMeta['enumLabels'])?.[String(enumValue)] ??
+                String(enumValue),
+              value: String(enumValue),
+            }))}
           />
         );
       }
 
-      if (inputType === "date") {
-        return <InputSlot {...sharedProps} key={key} type="date" />;
+      const { format, inputType, pattern, minLength, maxLength } = input;
+
+      if (inputType === 'tel') {
+        return (
+          <PhoneInput
+            {...sharedProps}
+            {...(phoneFields as FormGeneratorOptions['phoneFields'])}
+            inputSlot={InputSlot}
+            key={key}
+            selectSlot={SelectSlot}
+          />
+        );
       }
+
+      if (inputType === 'date') {
+        return (
+          <InputSlot
+            {...sharedProps}
+            key={key}
+            type='date'
+          />
+        );
+      }
+
+      const formatProps: Pick<
+        ComponentProps<typeof InputSlot>,
+        'inputMode' | 'type' | 'autoComplete'
+      > = {
+        inputMode:
+          sharedProps.inputMode ??
+          (format === 'email' ? 'email' : format === 'uri' ? 'url' : 'text'),
+        type:
+          sharedProps.type ??
+          (inputType === 'password' ? 'password' : format === 'email' ? 'email' : 'text'),
+        autoComplete:
+          sharedProps.autoComplete ??
+          (format === 'email'
+            ? 'email'
+            : inputType === 'password'
+              ? 'current-password'
+              : undefined),
+      };
 
       return (
         <InputSlot
           {...sharedProps}
-          inputMode={
-            sharedProps.inputMode ??
-            (format === "email" ? "email" : format === "uri" ? "url" : "text")
-          }
+          {...formatProps}
           key={key}
           maxLength={maxLength}
           minLength={minLength}
           pattern={pattern}
-          type={
-            inputType === "password" || inputType === "password-with-strength"
-              ? "password"
-              : format === "email"
-              ? "email"
-              : "text"
-          }
         />
       );
     }
 
-    if (type === "number" || type === "integer") {
+    if (type === 'number' || type === 'integer') {
       const { minimum, maximum } = input;
 
       return (
         <InputSlot
           {...sharedProps}
-          inputMode={sharedProps.inputMode ?? "numeric"}
+          inputMode={sharedProps.inputMode ?? 'numeric'}
           key={key}
           max={maximum}
           min={minimum}
-          type="number"
+          onChange={(e) => {
+            const parse = type === 'integer' ? parseInt : parseFloat;
+            const parsedValue = e.target.value && parse(e.target.value.toString());
+            setValueInState(Number.isNaN(parsedValue) ? valueWhenEmpty : parsedValue);
+          }}
+          type='number'
+        />
+      );
+    }
+
+    if (type === 'boolean') {
+      return (
+        <CheckboxSlot
+          {...sharedProps}
+          aria-required={false}
+          autoComplete={undefined}
+          checked={Boolean(valueFromState)}
+          inputMode={undefined}
+          key={key}
+          onChange={(e) => setValueInState(e.target.checked)}
+          placeholder={undefined}
+          required={false}
+          type='checkbox'
         />
       );
     }
